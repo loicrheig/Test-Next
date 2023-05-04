@@ -1,5 +1,7 @@
 import { BigQuery } from "@google-cloud/bigquery"
 import { NextResponse } from "next/server";
+import SQLString from 'sqlstring';
+
 
 export async function getTitle(size:number) {
   console.log('dffs ', process.env.CLIENT_ID)
@@ -12,7 +14,9 @@ export async function getTitle(size:number) {
     }
   })
 
-  const query = `SELECT Title FROM \`tb-datalake-v1.data_set_scraping.test\` LIMIT ${size}`
+
+
+  const query = SQLString.format("SELECT Title FROM `tb-datalake-v1.data_set_scraping.test` LIMIT ?", [size])
 
   // For all options, see https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query
 
