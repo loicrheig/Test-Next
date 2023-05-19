@@ -4,7 +4,7 @@ import { getTitle } from "../api/offer/route";
 export const revalidate = 60;
 async function getData() {
     return getTitle(10);
-  }
+}
   
 export default async function Offer() {
     const data = await getData();
