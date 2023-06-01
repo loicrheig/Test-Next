@@ -1,9 +1,8 @@
 import { BigQuery } from "@google-cloud/bigquery"
-import { NextResponse } from "next/server";
-import SQLString from 'sqlstring';
+import { NextResponse } from "next/server"
+import SQLString from 'sqlstring'
 
-
-export async function getTitle(size:number) {
+async function executeSelectQuery(query:string) {
   const client = new BigQuery({
     projectId: process.env.PROJECT_ID,
     credentials: {
@@ -12,10 +11,6 @@ export async function getTitle(size:number) {
       private_key: process.env.PRIVATE_KEY
     }
   })
-
-
-
-  const query = SQLString.format("SELECT Title FROM `tb-datalake-v1.data_set_scraping.test` LIMIT ?", [size])
 
   // Run the query as a job
   const [job] = await client.createQueryJob({
@@ -26,13 +21,17 @@ export async function getTitle(size:number) {
 
   // Wait for the query to finish
   const [rows] = await job.getQueryResults();
-
   return rows;
+}
+
+export function getOffers(size:number) {
+  const query = SQLString.format("SELECT Title, Address, ST_X(Coordinate), ST_Y(Coordinate) FROM `tb-datalake-v1.data_set_scraping.test` LIMIT ?", [size])
+  return executeSelectQuery(query);
 }
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const size = searchParams.get('size')??10;
-  const rows = await getTitle(+size);
+  const rows = await getOffers(+size);
   return NextResponse.json(rows);
 }

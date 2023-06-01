@@ -1,7 +1,15 @@
 import Map from '../../components/Map/index.js';
+import { getOffers } from "../api/offer/route";
 
-export default function Home() {
+async function getData() {
+  return getOffers(1);
+}
+
+export default async function Home() {
+  const data = await getData();
   return (
-      <Map />
+      <Map 
+        offers={data}
+      />
   )
 }

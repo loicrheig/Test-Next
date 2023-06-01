@@ -1,9 +1,9 @@
-import { getTitle } from "../api/offer/route";
+import { getOffers } from "../api/offer/route";
 
 // Temps de survie dans le cache
 export const revalidate = 60;
 async function getData() {
-    return getTitle(10);
+    return getOffers(10);
 }
   
 export default async function Offer() {

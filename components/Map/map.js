@@ -12,31 +12,43 @@ function getIcon() {
     });
 }
 
+function setSwitzerlandMap() {
+    var swissLayer = L.tileLayer.swiss(/* options */);
+    return swissLayer;
+}
+
 function getLayerGroup() {
     return L.layerGroup();
 }
 
-function Map(){
+function Map({offers}){
+    const rows = [];
+    for (let i = 0; i < offers.length; i++) {
+        // note: we are adding a key prop here to allow react to uniquely identify each
+        // element in this array. see: https://reactjs.org/docs/lists-and-keys.html
+        let offer = offers[i];
+        let lat = offer.f1_;
+        let lng = offer.f0_;
+        rows.push(
+            <Marker position={[lat, lng]} icon={getIcon()}>
+                <Popup>
+                    {offer.Title}
+                </Popup>
+            </Marker>
+        );
+    }
     return (
         <MapContainer center={[46.519962, 6.633597]} zoom={13} scrollWheelZoom={true} style={{ height: "100vh", width: "100%" }}>
+            <LayerGroup
+                attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
             <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <Marker position={[46.519962, 6.633597]} icon={getIcon()}>
-                <Popup>
-                    A pretty CSS3 popup. <br /> Easily customizable.
-                </Popup>
-            </Marker>
-            <Marker position={[45.519962, 6.6653597]} icon={getIcon()}>
-            </Marker>
-            <Marker position={[46.619962, 6.6653597]} icon={getIcon()}>
-            </Marker>
-            <Marker position={[45.569962, 6.4653597]} icon={getIcon()}>
-            </Marker>
-            <Marker position={[45.919962, 6.69653597]} icon={getIcon()}>
-            </Marker>
             <Circle center={[46.519962, 6.633597]} pathOptions={{ color: 'red' }} radius={2000} />
+            {rows}
         </MapContainer>
     )
 }
