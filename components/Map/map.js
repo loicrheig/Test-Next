@@ -20,12 +20,20 @@ function Map({offers}){
         // note: we are adding a key prop here to allow react to uniquely identify each
         // element in this array. see: https://reactjs.org/docs/lists-and-keys.html
         let offer = offers[i];
+
+        let popupWidth = 200;
+
         if (offer.f1_ == null || offer.f0_ == null) {
             continue;
         }
+
+        if(Object.values(offer.ImageUrls).length > 0){
+            popupWidth = 400;
+        }
+
         rows.push(
             <Marker position={[offer.f1_, offer.f0_]} icon={getIcon()}>
-                <Popup>
+                <Popup maxWidth={popupWidth}>
                     <OfferPanel offer={offer} />
                 </Popup>
             </Marker>
