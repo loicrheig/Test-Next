@@ -5,6 +5,8 @@ import { MapContainer, TileLayer, Marker, Popup, Circle, LayerGroup, LayersContr
 import L from 'leaflet';
 import icon from 'leaflet/dist/images/marker-icon.png';
 
+import {OfferPanel} from "../Offer/offer-panel.js"
+
 function getIcon() {
     return L.icon({
         iconUrl: icon.src,
@@ -18,12 +20,13 @@ function Map({offers}){
         // note: we are adding a key prop here to allow react to uniquely identify each
         // element in this array. see: https://reactjs.org/docs/lists-and-keys.html
         let offer = offers[i];
-        let lat = offer.f1_;
-        let lng = offer.f0_;
+        if (offer.f1_ == null || offer.f0_ == null) {
+            continue;
+        }
         rows.push(
-            <Marker position={[lat, lng]} icon={getIcon()}>
+            <Marker position={[offer.f1_, offer.f0_]} icon={getIcon()}>
                 <Popup>
-                    {offer.Title}
+                    <OfferPanel offer={offer} />
                 </Popup>
             </Marker>
         );
@@ -68,7 +71,11 @@ function Map({offers}){
                     />
                 </LayersControl.BaseLayer>
             </LayersControl>
-            <Circle center={[46.519962, 6.633597]} pathOptions={{ color: 'red' }} radius={2000} />
+            <Circle center={[46.519962, 6.633597]} pathOptions={{ color: 'red' }} radius={2000}>
+                <Popup>
+                    <span>Popup in Circle</span>
+                </Popup>
+            </Circle>
             {rows}
         </MapContainer>
     )
