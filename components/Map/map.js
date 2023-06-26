@@ -39,8 +39,13 @@ function Map({offers}){
             </Marker>
         );
     }
+    // Coordonnées géographiques des limites de la Suisse
+    var bounds = [
+        [45.818, 5.955], // Coin sud-ouest
+        [47.808, 10.492] // Coin nord-est
+    ];
     return (
-        <MapContainer center={[46.519962, 6.633597]} zoom={13} scrollWheelZoom={true} style={{ height: "100vh", width: "100%" }}>
+        <MapContainer center={[46.519962, 6.633597]} zoom={13} scrollWheelZoom={true} style={{ height: "100vh", width: "100%" }} maxBounds={bounds} maxBoundsViscosity={1.0}>
             <LayersControl position="topright">
                 <LayersControl.BaseLayer checked name="OpenStreetMap Mapnik">
                     <TileLayer 
