@@ -6,6 +6,7 @@ import L from 'leaflet';
 import icon from 'leaflet/dist/images/marker-icon.png';
 
 import {OfferPanel} from "../Offer/offer-panel.js"
+import { useState } from "react";
 
 function getIcon() {
     return L.icon({
@@ -14,9 +15,37 @@ function getIcon() {
     });
 }
 
+// Component showing a circle or nothing depending on the state of the marker
+function CircleMarkerWithState(props) {
+    const [showCircle, setShowCircle] = useState(false);
+
+    function activateCircle() {
+        setShowCircle(!showCircle);
+    }
+
+
+    return (
+        <Marker position={props.position} icon={getIcon()} riseOnHover={true} eventHandlers={{ click: activateCircle }}>
+            <Popup>
+                <OfferPanel offer={props.offer} />
+            </Popup>
+            { showCircle && <Circle center={props.position} radius={1000} /> }
+        </Marker>
+    );
+}
+
 function Map({offers}){
+
     const rows = [];
+    let showCircles = [];
+
+    function onMarkerClick(i) {
+        showCircles[i] = !showCircles[i];
+    }
+
     for (let i = 0; i < offers.length; i++) {
+        showCircles.push(false);
+
         // note: we are adding a key prop here to allow react to uniquely identify each
         // element in this array. see: https://reactjs.org/docs/lists-and-keys.html
         let offer = offers[i];
@@ -32,17 +61,13 @@ function Map({offers}){
         }
 
         rows.push(
-            <Marker position={[offer.f1_, offer.f0_]} icon={getIcon()}>
-                <Popup maxWidth={popupWidth}>
-                    <OfferPanel offer={offer} />
-                </Popup>
-            </Marker>
+            <CircleMarkerWithState position={[offer.f1_, offer.f0_]} offer={offer} />
         );
     }
     // Coordonnées géographiques des limites de la Suisse
     var bounds = [
-        [45.818, 5.955], // Coin sud-ouest
-        [47.808, 10.492] // Coin nord-est
+        [44.5, 2], // Coin sud-ouest
+        [49, 13] // Coin nord-est
     ];
     return (
         <MapContainer center={[46.519962, 6.633597]} zoom={13} scrollWheelZoom={true} style={{ height: "100vh", width: "100%" }} maxBounds={bounds} maxBoundsViscosity={1.0}>
@@ -84,11 +109,6 @@ function Map({offers}){
                     />
                 </LayersControl.BaseLayer>
             </LayersControl>
-            <Circle center={[46.519962, 6.633597]} pathOptions={{ color: 'red' }} radius={2000}>
-                <Popup>
-                    <span>Popup in Circle</span>
-                </Popup>
-            </Circle>
             {rows}
         </MapContainer>
     )
