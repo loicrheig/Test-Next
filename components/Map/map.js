@@ -3,7 +3,6 @@ import "leaflet/dist/leaflet.css"
 import { MapContainer, TileLayer, Marker, Popup, Circle, LayerGroup, LayersControl } from "react-leaflet"
 
 import L from 'leaflet';
-import icon from 'leaflet/dist/images/marker-icon.png';
 
 import {OfferPanel} from "../Offer/offer-panel.js"
 import {FilterPanel} from "../FilterPanel/filter-panel.js"
@@ -17,11 +16,19 @@ return(
 )
 }
 
-function getIcon() {
-    return L.icon({
-        iconUrl: icon.src,
-        iconSize: [25, 40],
-    });
+function getIcon(isAdressPrecise) {
+    if (isAdressPrecise) {
+        return L.icon({
+            iconUrl: '/detailsAddressMarker.png',
+            iconSize: [25, 40],
+        });
+    }
+    else {
+        return L.icon({
+            iconUrl: '/approximateAddressMarker.png',
+            iconSize: [25, 40],
+        });
+    }
 }
 
 // Component showing a circle or nothing depending on the state of the marker
@@ -34,7 +41,7 @@ function CircleMarkerWithState(props) {
 
 
     return (
-        <Marker position={props.position} icon={getIcon()} riseOnHover={true} eventHandlers={{ click: activateCircle }}>
+        <Marker position={props.position} icon={getIcon(props.offer['AddressPrecise'])} riseOnHover={true} eventHandlers={{ click: activateCircle }}>
             <Popup>
                 <OfferPanel offer={props.offer} />
             </Popup>
