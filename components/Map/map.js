@@ -11,6 +11,8 @@ import {
 
 import L from "leaflet";
 
+import { parametersNames } from "../../app/api/offer/route.ts";
+
 import { OfferPanel } from "../Offer/offer-panel.js";
 import { FilterPanel, FilterButton } from "../FilterPanel/filter-panel.js";
 import { useState, useEffect } from "react";
@@ -54,6 +56,20 @@ function CircleMarkerWithState(props) {
   );
 }
 
+function SimpleMarker(props) {
+  const popupWidth = Math.max((screen.width * 1) / 3, 300);
+  return (
+    <Marker
+      position={props.position}
+      icon={getIcon(props.offer.AddressPrecise)}
+    >
+      <Popup maxWidth={popupWidth}>
+        <OfferPanel offer={props.offer} />
+      </Popup>
+    </Marker>
+  );
+}
+
 function createMarkers(offers, setOffers) {
   const tmpRows = [];
 
@@ -66,13 +82,19 @@ function createMarkers(offers, setOffers) {
       continue;
     }
 
-    tmpRows.push(
-      <CircleMarkerWithState
-        position={[offer.f1_, offer.f0_]}
-        offer={offer}
-        key={i}
-      />
-    );
+    if (offer.AddressPrecise) {
+      tmpRows.push(
+        <SimpleMarker position={[offer.f1_, offer.f0_]} offer={offer} key={i} />
+      );
+    } else {
+      tmpRows.push(
+        <CircleMarkerWithState
+          position={[offer.f1_, offer.f0_]}
+          offer={offer}
+          key={i}
+        />
+      );
+    }
   }
 
   setOffers(tmpRows);
@@ -101,25 +123,25 @@ function Map() {
 
   useEffect(() => {
     if (filters != nullFilter) {
-      let request = "/api/offer?";
+      const url = new URL("/api/offer", window.location.origin);
 
-      if (filters.minPrice != 0) {
-        request += "minPrice=" + filters.minPrice + "&";
-      }
-      if (filters.maxPrice != 0) {
-        request += "maxPrice=" + filters.maxPrice + "&";
+      if (filters.nbRooms != 0) {
+        url.searchParams.append(parametersNames[0], filters.nbRooms);
       }
       if (filters.minSurface != 0) {
-        request += "minSurface=" + filters.minSurface + "&";
+        url.searchParams.append(parametersNames[1], filters.minSurface);
       }
       if (filters.maxSurface != 0) {
-        request += "maxSurface=" + filters.maxSurface + "&";
+        url.searchParams.append(parametersNames[2], filters.maxSurface);
       }
-      if (filters.nbRooms != 0) {
-        request += "nbRooms=" + filters.nbRooms + "&";
+      if (filters.minPrice != 0) {
+        url.searchParams.append(parametersNames[3], filters.minPrice);
+      }
+      if (filters.maxPrice != 0) {
+        url.searchParams.append(parametersNames[4], filters.maxPrice);
       }
 
-      fetch(request)
+      fetch(url)
         .then((res) => res.json())
         .then((data) => {
           createMarkers(data, setOffers);
