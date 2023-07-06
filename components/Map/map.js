@@ -6,7 +6,6 @@ import {
   Marker,
   Popup,
   Circle,
-  LayerGroup,
   LayersControl,
 } from "react-leaflet";
 
@@ -40,8 +39,6 @@ function CircleMarkerWithState(props) {
 
   const popupWidth = Math.max((screen.width * 1) / 3, 300);
 
-  console.log(props.offer.AddressPrecise);
-
   return (
     <Marker
       position={props.position}
@@ -57,86 +54,77 @@ function CircleMarkerWithState(props) {
   );
 }
 
-function Map({ offers }) {
-  let showCircles = [];
+function createMarkers(offers, setOffers) {
+  const tmpRows = [];
 
-  const [rows, setRows] = useState([]);
+  for (let i = 0; i < offers.length; i++) {
+    // note: we are adding a key prop here to allow react to uniquely identify each
+    // element in this array. see: https://reactjs.org/docs/lists-and-keys.html
+    let offer = offers[i];
 
-  const [filters, setFilters] = useState({
-    minPrice: null,
-    maxPrice: null,
-    minSurface: null,
-    maxSurface: null,
-    nbRooms: null,
-  });
-
-  useEffect(() => {
-    const tmpRows = [];
-
-    for (let i = 0; i < offers.length; i++) {
-      showCircles.push(false);
-
-      // note: we are adding a key prop here to allow react to uniquely identify each
-      // element in this array. see: https://reactjs.org/docs/lists-and-keys.html
-      let offer = offers[i];
-
-      let popupWidth = 200;
-
-      if (offer.f1_ == null || offer.f0_ == null) {
-        continue;
-      }
-
-      if (Object.values(offer.ImageUrls).length > 0) {
-        popupWidth = 400;
-      }
-
-      tmpRows.push(
-        <CircleMarkerWithState
-          position={[offer.f1_, offer.f0_]}
-          offer={offer}
-          key={i}
-        />
-      );
+    if (offer.f1_ == null || offer.f0_ == null) {
+      continue;
     }
 
-    setRows(tmpRows);
-  }, [offers]);
+    tmpRows.push(
+      <CircleMarkerWithState
+        position={[offer.f1_, offer.f0_]}
+        offer={offer}
+        key={i}
+      />
+    );
+  }
 
-  // when filters change, hide some rows
+  setOffers(tmpRows);
+}
+
+function Map() {
+  const [offers, setOffers] = useState([]);
+
+  /*useEffect(() => {
+    fetch("/api/offer?size=1000")
+      .then((res) => res.json())
+      .then((data) => {
+        createMarkers(data, setOffers);
+      });
+  }, []);*/
+
+  const nullFilter = {
+    minPrice: 0,
+    maxPrice: 0,
+    minSurface: 0,
+    maxSurface: 0,
+    nbRooms: 0,
+  };
+
+  const [filters, setFilters] = useState(nullFilter);
+
   useEffect(() => {
-    const tmpRows = [];
+    if (filters != nullFilter) {
+      let request = "/api/offer?";
 
-    for (let i = 0; i < offers.length; i++) {
-      // note: we are adding a key prop here to allow react to uniquely identify each
-      // element in this array. see: https://reactjs.org/docs/lists-and-keys.html
-      let offer = offers[i];
-
-      if (offer.f1_ == null || offer.f0_ == null) {
-        continue;
+      if (filters.minPrice != 0) {
+        request += "minPrice=" + filters.minPrice + "&";
+      }
+      if (filters.maxPrice != 0) {
+        request += "maxPrice=" + filters.maxPrice + "&";
+      }
+      if (filters.minSurface != 0) {
+        request += "minSurface=" + filters.minSurface + "&";
+      }
+      if (filters.maxSurface != 0) {
+        request += "maxSurface=" + filters.maxSurface + "&";
+      }
+      if (filters.nbRooms != 0) {
+        request += "nbRooms=" + filters.nbRooms + "&";
       }
 
-      if (
-        (filters.minPrice == null || offer.Price >= filters.minPrice) &&
-        (filters.maxPrice == null || offer.Price <= filters.maxPrice)
-      ) {
-        if (
-          (filters.minSurface == null || offer.Surface >= filters.minSurface) &&
-          (filters.maxSurface == null || offer.Surface <= filters.maxSurface)
-        ) {
-          if (filters.nbRooms == null || offer.NbRooms == filters.nbRooms) {
-            tmpRows.push(
-              <CircleMarkerWithState
-                position={[offer.f1_, offer.f0_]}
-                offer={offer}
-                key={i}
-              />
-            );
-          }
-        }
-      }
+      fetch(request)
+        .then((res) => res.json())
+        .then((data) => {
+          createMarkers(data, setOffers);
+        });
     }
-
-    setRows(tmpRows);
   }, [filters]);
 
   // Coordonnées géographiques des limites de la Suisse
@@ -194,7 +182,7 @@ function Map({ offers }) {
               />
             </LayersControl.BaseLayer>
           </LayersControl>
-          {rows}
+          {offers}
         </MapContainer>
       </div>
       <FilterButton>
