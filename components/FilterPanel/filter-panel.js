@@ -15,6 +15,7 @@ function FilterPanel({ filterFunction, data }) {
   }
 
   function onSubmit(event) {
+    toggleSlideover();
     event.preventDefault();
     const data = {
       minPrice: event.target.minPrice.value,
@@ -149,7 +150,11 @@ function FilterPanel({ filterFunction, data }) {
             step={0.5}
             name="nbRooms"
           />
-          <input type="submit" value="Submit" />
+          <input
+            type="submit"
+            value="Submit"
+            className="col-span-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          />
         </div>
       </form>
     );

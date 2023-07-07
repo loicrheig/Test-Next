@@ -72,7 +72,6 @@ function SimpleMarker(props) {
 
 function createMarkers(offers, setOffers) {
   const tmpRows = [];
-
   for (let i = 0; i < offers.length; i++) {
     // note: we are adding a key prop here to allow react to uniquely identify each
     // element in this array. see: https://reactjs.org/docs/lists-and-keys.html
@@ -96,20 +95,11 @@ function createMarkers(offers, setOffers) {
       );
     }
   }
-
   setOffers(tmpRows);
 }
 
 function Map() {
   const [offers, setOffers] = useState([]);
-
-  /*useEffect(() => {
-    fetch("/api/offer?size=1000")
-      .then((res) => res.json())
-      .then((data) => {
-        createMarkers(data, setOffers);
-      });
-  }, []);*/
 
   const nullFilter = {
     minPrice: 0,
@@ -118,7 +108,6 @@ function Map() {
     maxSurface: 0,
     nbRooms: 0,
   };
-
   const [filters, setFilters] = useState(nullFilter);
 
   useEffect(() => {
