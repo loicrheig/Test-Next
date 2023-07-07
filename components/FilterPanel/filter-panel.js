@@ -1,6 +1,8 @@
 import { useState } from "react";
 
 function FilterPanel({ filterFunction, data }) {
+  const priceMin = 0;
+  const priceMax = 10000;
   // The value w-x for map-container need to be 1-X for slideover-container
 
   function toggleSlideover() {
@@ -24,9 +26,27 @@ function FilterPanel({ filterFunction, data }) {
     filterFunction(data);
   }
 
+  function changeMinSlider(setterMaxFunction, value, id) {
+    updateSlider(id, setterMaxFunction, value, "min");
+  }
+
+  function changeMaxSlider(setterMinFunction, value, id) {
+    updateSlider(id, setterMinFunction, value, "max");
+  }
+
+  function updateSlider(inputId, setterFunction, value, mode) {
+    value = parseInt(value);
+    var inputElement = document.getElementById(inputId);
+    if (
+      (mode === "min" && value > parseInt(inputElement.value)) ||
+      (mode === "max" && value < parseInt(inputElement.value))
+    ) {
+      setterFunction(value);
+      inputElement.value = value;
+    }
+  }
+
   function FilterForm() {
-    const priceMin = 0;
-    const priceMax = 10000;
     const [minPrice, setMinPrice] = useState(data.minPrice ?? priceMin);
     const [maxPrice, setMaxPrice] = useState(data.maxPrice ?? priceMax);
 
@@ -37,10 +57,13 @@ function FilterPanel({ filterFunction, data }) {
 
     // return a form filtering the map offers
     return (
-      <form className="mt-20 ml-4 mr-4 p-4 border-4" onSubmit={onSubmit}>
-        <div className="grid gap-0 grid-cols-2 grid-rows-5">
+      <form
+        className="mt-20 ml-4 mr-4 p-4 border-4 bg-gray-200 rounded-md"
+        onSubmit={onSubmit}
+      >
+        <div className="grid gap-4 grid-cols-2 grid-rows-5">
           <label className="col-span-2 text-center">Prix</label>
-          <label>Min {minPrice}</label>
+          <label>Min {minPrice}.-</label>
           <div>
             <input
               value={minPrice}
@@ -50,9 +73,14 @@ function FilterPanel({ filterFunction, data }) {
               name="minPrice"
               min={priceMin}
               max={priceMax}
+              step={5}
+              id="minPriceInput"
+              onMouseUp={(e) =>
+                changeMinSlider(setMaxPrice, e.target.value, "maxPriceInput")
+              }
             />
           </div>
-          <label>Max {maxPrice}</label>
+          <label>Max {maxPrice}.-</label>
           <div>
             <input
               value={maxPrice}
@@ -62,10 +90,15 @@ function FilterPanel({ filterFunction, data }) {
               name="maxPrice"
               min={priceMin}
               max={priceMax}
+              step={5}
+              id="maxPriceInput"
+              onMouseUp={(e) =>
+                changeMaxSlider(setMinPrice, e.target.value, "minPriceInput")
+              }
             />
           </div>
           <label className="col-span-2 text-center">Surface</label>
-          <label>Min {minSurface}</label>
+          <label>Min {minSurface} m2</label>
           <div>
             <input
               value={minSurface}
@@ -75,9 +108,18 @@ function FilterPanel({ filterFunction, data }) {
               name="minSurface"
               min={surfaceMin}
               max={surfaceMax}
+              step={5}
+              id="minSurfaceInput"
+              onMouseUp={(e) =>
+                changeMinSlider(
+                  setMaxSurface,
+                  e.target.value,
+                  "maxSurfaceInput"
+                )
+              }
             />
           </div>
-          <label>Max {maxSurface}</label>
+          <label>Max {maxSurface} m2</label>
           <div>
             <input
               value={maxSurface}
@@ -87,10 +129,26 @@ function FilterPanel({ filterFunction, data }) {
               name="maxSurface"
               min={surfaceMin}
               max={surfaceMax}
+              step={5}
+              id="maxSurfaceInput"
+              onMouseUp={(e) =>
+                changeMaxSlider(
+                  setMinSurface,
+                  e.target.value,
+                  "minSurfaceInput"
+                )
+              }
             />
           </div>
           <label>Nombre de pièces</label>
-          <input type="number" min="0" max="10" step={0.5} name="nbRooms" />
+          <input
+            className="w-1/2 text-center"
+            type="number"
+            min="0"
+            max="10"
+            step={0.5}
+            name="nbRooms"
+          />
           <input type="submit" value="Submit" />
         </div>
       </form>
