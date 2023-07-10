@@ -1,8 +1,60 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { parametersNames } from "../../app/api/offer/route.ts";
 
-function FilterPanel({ filterFunction, data }) {
+function FilterPanel({ updateOffers, createMarkers }) {
   const priceMin = 0;
   const priceMax = 10000;
+
+  const nullFilter = {
+    minPrice: 0,
+    maxPrice: 0,
+    minSurface: 0,
+    maxSurface: 0,
+    nbRooms: 0,
+    schoolDistance: 0,
+    shopDistance: 0,
+    museumNumber: 0,
+  };
+
+  const [filters, setFilters] = useState(nullFilter);
+
+  useEffect(() => {
+    if (filters != nullFilter) {
+      const url = new URL("/api/offer", window.location.origin);
+
+      if (filters.nbRooms != 0) {
+        url.searchParams.append(parametersNames[0], filters.nbRooms);
+      }
+      if (filters.minSurface != 0) {
+        url.searchParams.append(parametersNames[1], filters.minSurface);
+      }
+      if (filters.maxSurface != 0) {
+        url.searchParams.append(parametersNames[2], filters.maxSurface);
+      }
+      if (filters.minPrice != 0) {
+        url.searchParams.append(parametersNames[3], filters.minPrice);
+      }
+      if (filters.maxPrice != 0) {
+        url.searchParams.append(parametersNames[4], filters.maxPrice);
+      }
+      if (filters.schoolDistance != 0) {
+        url.searchParams.append(parametersNames[5], filters.schoolDistance);
+      }
+      if (filters.shopDistance != 0) {
+        url.searchParams.append(parametersNames[6], filters.shopDistance);
+      }
+      if (filters.museumNumber != 0) {
+        url.searchParams.append(parametersNames[7], filters.museumNumber);
+      }
+
+      fetch(url)
+        .then((res) => res.json())
+        .then((data) => {
+          updateOffers(createMarkers(data));
+        });
+    }
+  }, [filters]);
+
   // The value w-x for map-container need to be 1-X for slideover-container
 
   function toggleSlideover() {
@@ -27,7 +79,7 @@ function FilterPanel({ filterFunction, data }) {
       shopDistance: event.target.shopDistance.value,
       museumNumber: event.target.museumNumber.value,
     };
-    filterFunction(data);
+    setFilters(data);
   }
 
   function changeMinSlider(setterMaxFunction, value, id) {
@@ -51,13 +103,17 @@ function FilterPanel({ filterFunction, data }) {
   }
 
   function FilterForm() {
-    const [minPrice, setMinPrice] = useState(data.minPrice ?? priceMin);
-    const [maxPrice, setMaxPrice] = useState(data.maxPrice ?? priceMax);
+    const [minPrice, setMinPrice] = useState(filters.minPrice ?? priceMin);
+    const [maxPrice, setMaxPrice] = useState(filters.maxPrice ?? priceMax);
 
     const surfaceMin = 0;
     const surfaceMax = 1000;
-    const [minSurface, setMinSurface] = useState(data.minSurface ?? surfaceMin);
-    const [maxSurface, setMaxSurface] = useState(data.maxSurface ?? surfaceMax);
+    const [minSurface, setMinSurface] = useState(
+      filters.minSurface ?? surfaceMin
+    );
+    const [maxSurface, setMaxSurface] = useState(
+      filters.maxSurface ?? surfaceMax
+    );
 
     // return a form filtering the map offers
     return (
@@ -152,6 +208,7 @@ function FilterPanel({ filterFunction, data }) {
             max="10"
             step={0.5}
             name="nbRooms"
+            defaultValue={filters.nbRooms ?? 0}
           />
           <label>Distance max d'une école</label>
           <input
@@ -161,6 +218,7 @@ function FilterPanel({ filterFunction, data }) {
             max="300"
             step={5}
             name="schoolDistance"
+            defaultValue={filters.schoolDistance ?? 0}
           />
           <label>Distance max d'un commerce</label>
           <input
@@ -170,6 +228,7 @@ function FilterPanel({ filterFunction, data }) {
             max="300"
             step={5}
             name="shopDistance"
+            defaultValue={filters.shopDistance ?? 0}
           />
           <label>Nombre minimum de musées alentours</label>
           <input
@@ -179,6 +238,7 @@ function FilterPanel({ filterFunction, data }) {
             max="5"
             step={1}
             name="museumNumber"
+            defaultValue={filters.museumNumber ?? 0}
           />
           <input
             type="submit"

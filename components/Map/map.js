@@ -11,11 +11,9 @@ import {
 
 import L from "leaflet";
 
-import { parametersNames } from "../../app/api/offer/route.ts";
-
 import { OfferPanel } from "../Offer/offer-panel.js";
 import { FilterPanel, FilterButton } from "../FilterPanel/filter-panel.js";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 function getIcon(isAdressPrecise) {
   if (isAdressPrecise) {
@@ -101,56 +99,6 @@ function createMarkers(offers) {
 function Map() {
   const [offers, setOffers] = useState([]);
 
-  const nullFilter = {
-    minPrice: 0,
-    maxPrice: 0,
-    minSurface: 0,
-    maxSurface: 0,
-    nbRooms: 0,
-    schoolDistance: 0,
-    shopDistance: 0,
-    museumNumber: 0,
-  };
-
-  const [filters, setFilters] = useState(nullFilter);
-
-  useEffect(() => {
-    if (filters != nullFilter) {
-      const url = new URL("/api/offer", window.location.origin);
-
-      if (filters.nbRooms != 0) {
-        url.searchParams.append(parametersNames[0], filters.nbRooms);
-      }
-      if (filters.minSurface != 0) {
-        url.searchParams.append(parametersNames[1], filters.minSurface);
-      }
-      if (filters.maxSurface != 0) {
-        url.searchParams.append(parametersNames[2], filters.maxSurface);
-      }
-      if (filters.minPrice != 0) {
-        url.searchParams.append(parametersNames[3], filters.minPrice);
-      }
-      if (filters.maxPrice != 0) {
-        url.searchParams.append(parametersNames[4], filters.maxPrice);
-      }
-      if (filters.schoolDistance != 0) {
-        url.searchParams.append(parametersNames[5], filters.schoolDistance);
-      }
-      if (filters.shopDistance != 0) {
-        url.searchParams.append(parametersNames[6], filters.shopDistance);
-      }
-      if (filters.museumNumber != 0) {
-        url.searchParams.append(parametersNames[7], filters.museumNumber);
-      }
-
-      fetch(url)
-        .then((res) => res.json())
-        .then((data) => {
-          setOffers(createMarkers(data));
-        });
-    }
-  }, [filters]);
-
   // Coordonnées géographiques des limites de la Suisse
   var bounds = [
     [44.5, 2], // Coin sud-ouest
@@ -210,15 +158,7 @@ function Map() {
         </MapContainer>
       </div>
       <FilterButton>
-        <FilterPanel
-          filterFunction={setFilters}
-          data={{
-            minPrice: filters.minPrice,
-            maxPrice: filters.maxPrice,
-            minSurface: filters.minSurface,
-            maxSurface: filters.maxSurface,
-          }}
-        />
+        <FilterPanel updateOffers={setOffers} createMarkers={createMarkers} />
       </FilterButton>
     </div>
   );
