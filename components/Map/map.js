@@ -107,6 +107,9 @@ function Map() {
     minSurface: 0,
     maxSurface: 0,
     nbRooms: 0,
+    schoolDistance: 0,
+    shopDistance: 0,
+    museumNumber: 0,
   };
 
   const [filters, setFilters] = useState(nullFilter);
@@ -129,6 +132,15 @@ function Map() {
       }
       if (filters.maxPrice != 0) {
         url.searchParams.append(parametersNames[4], filters.maxPrice);
+      }
+      if (filters.schoolDistance != 0) {
+        url.searchParams.append(parametersNames[5], filters.schoolDistance);
+      }
+      if (filters.shopDistance != 0) {
+        url.searchParams.append(parametersNames[6], filters.shopDistance);
+      }
+      if (filters.museumNumber != 0) {
+        url.searchParams.append(parametersNames[7], filters.museumNumber);
       }
 
       fetch(url)

@@ -23,6 +23,9 @@ function FilterPanel({ filterFunction, data }) {
       minSurface: event.target.minSurface.value,
       maxSurface: event.target.maxSurface.value,
       nbRooms: event.target.nbRooms.value,
+      schoolDistance: event.target.schoolDistance.value,
+      shopDistance: event.target.shopDistance.value,
+      museumNumber: event.target.museumNumber.value,
     };
     filterFunction(data);
   }
@@ -141,7 +144,7 @@ function FilterPanel({ filterFunction, data }) {
               }
             />
           </div>
-          <label>Nombre de pièces</label>
+          <label>Nombre de pièces exactes</label>
           <input
             className="w-1/2 text-center"
             type="number"
@@ -149,6 +152,33 @@ function FilterPanel({ filterFunction, data }) {
             max="10"
             step={0.5}
             name="nbRooms"
+          />
+          <label>Distance max d'une école</label>
+          <input
+            className="w-1/2 text-center"
+            type="number"
+            min="0"
+            max="300"
+            step={5}
+            name="schoolDistance"
+          />
+          <label>Distance max d'un commerce</label>
+          <input
+            className="w-1/2 text-center"
+            type="number"
+            min="0"
+            max="300"
+            step={5}
+            name="shopDistance"
+          />
+          <label>Nombre minimum de musées alentours</label>
+          <input
+            className="w-1/2 text-center"
+            type="number"
+            min="0"
+            max="5"
+            step={1}
+            name="museumNumber"
           />
           <input
             type="submit"

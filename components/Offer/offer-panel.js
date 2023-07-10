@@ -15,39 +15,25 @@ const onImageError = (e) => {
 };
 
 function OfferPanel({ offer }) {
-  let descriptionComponent;
-  let imagesComponent;
-  // array of images
-  let imagesContent = [];
-
-  offer.imageUrls = Object.values(offer.ImageUrls);
-
-  if (offer.Description == null) {
-    descriptionComponent = <></>;
-  }
-  // Check if description size is too long
-  else if (offer.Description.length > 100) {
+  let descriptionComponent = <></>;
+  if (offer.Description.length > 100) {
     descriptionComponent = contentScrollable(offer.Description, false, "h-48");
   } else {
     descriptionComponent = <div>{offer.Description}</div>;
   }
 
-  for (let i = 0; i < offer.imageUrls.length; i++) {
-    // Check that the img url do not give a 404
-    if (offer.imageUrls[i].includes("404")) {
-      continue;
-    }
+  const imagesUrls =
+    offer.ImageUrls != null &&
+    offer.ImageUrls.map((imageUrl, index) => (
+      <img key={index} src={imageUrl} onError={onImageError} />
+    ));
 
-    imagesContent[i] = (
-      <img key={i} src={offer.imageUrls[i]} onError={onImageError} />
+  const imagesComponent =
+    offer.ImageUrls != null && imagesUrls.length > 1 ? (
+      contentScrollable(imagesUrls, false, "h-64")
+    ) : (
+      <div className="mb-5">{imagesUrls}</div>
     );
-  }
-
-  if (imagesContent.length > 1) {
-    imagesComponent = contentScrollable(imagesContent, false, "h-64");
-  } else {
-    imagesComponent = <div className="mb-5">{imagesContent}</div>;
-  }
 
   const titleComponent = (
     <div className="text-2xl font-bold mb-5">
@@ -67,7 +53,45 @@ function OfferPanel({ offer }) {
     ? offer.Price.toString() + " CHF"
     : parameterMissing;
 
-  console.log(offer.Schools);
+  const schoolsComponent = (
+    <ul className="text-1xl">
+      {offer.Schools.map((school, index) => (
+        <li key={index}>
+          {school.Name} - {school.Distance} m
+        </li>
+      ))}
+    </ul>
+  );
+
+  const shopsComponent = (
+    <ul className="text-1xl">
+      {offer.Shops.map((shop, index) => (
+        <li key={index}>
+          {shop.Name} - {shop.Distance} m
+        </li>
+      ))}
+    </ul>
+  );
+
+  const transportsComponent = (
+    <ul className="text-1xl">
+      {offer.PublicTransports.map((transport, index) => (
+        <li key={index}>
+          {transport.Name} - {transport.Distance} m
+        </li>
+      ))}
+    </ul>
+  );
+
+  const InterestPointsComponent = (
+    <ul className="text-1xl">
+      {offer.InterestPoints.map((point, index) => (
+        <div key={index}>
+          {point.Type} - {point.Name} - {point.Distance} m
+        </div>
+      ))}
+    </ul>
+  );
 
   return contentScrollable(
     <div className={styles.offerHeight}>
@@ -90,29 +114,13 @@ function OfferPanel({ offer }) {
       <div className="text-1xl font-bold mb-5">Structures environnantes</div>
       <div className="grid gap-1 grid-cols-2">
         <div className="text-1xl font-bold">Ecoles</div>
-        <ul className="text-1xl">
-          {offer.Schools.map((school) => {
-            <li>{school.Name}</li>;
-          })}
-        </ul>
+        {schoolsComponent}
         <div className="text-1xl font-bold">Magasins</div>
-        <ul className="text-1xl">
-          {offer.Shops.map((shop) => {
-            <li>{shop.Name}</li>;
-          })}
-        </ul>
+        {shopsComponent}
         <div className="text-1xl font-bold">Transports publiques</div>
-        <ul className="text-1xl">
-          {offer.PublicTransports.map((tran) => {
-            <li>{tran.Name}</li>;
-          })}
-        </ul>
+        {transportsComponent}
         <div className="text-1xl font-bold">Points d'intérêt</div>
-        <ul className="text-1xl">
-          {offer.InterestPoints.map((point) => {
-            <li>{point.Name}</li>;
-          })}
-        </ul>
+        {InterestPointsComponent}
       </div>
     </div>,
     true
