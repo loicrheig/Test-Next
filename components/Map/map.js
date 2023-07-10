@@ -70,7 +70,7 @@ function SimpleMarker(props) {
   );
 }
 
-function createMarkers(offers, setOffers) {
+function createMarkers(offers) {
   const tmpRows = [];
   for (let i = 0; i < offers.length; i++) {
     // note: we are adding a key prop here to allow react to uniquely identify each
@@ -95,7 +95,7 @@ function createMarkers(offers, setOffers) {
       );
     }
   }
-  setOffers(tmpRows);
+  return tmpRows;
 }
 
 function Map() {
@@ -108,6 +108,7 @@ function Map() {
     maxSurface: 0,
     nbRooms: 0,
   };
+
   const [filters, setFilters] = useState(nullFilter);
 
   useEffect(() => {
@@ -133,7 +134,7 @@ function Map() {
       fetch(url)
         .then((res) => res.json())
         .then((data) => {
-          createMarkers(data, setOffers);
+          setOffers(createMarkers(data));
         });
     }
   }, [filters]);
