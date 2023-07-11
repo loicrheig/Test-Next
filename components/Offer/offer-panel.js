@@ -14,6 +14,11 @@ const onImageError = (e) => {
   e.target.src = "/imgNotAvailable.png";
 };
 
+function formatDistance(distance) {
+  // Format la distance pour qu'elle ait un step de 5
+  return Math.round(distance / 5) * 5;
+}
+
 function OfferPanel({ offer }) {
   let descriptionComponent = <></>;
   if (offer.Description.length > 100) {
@@ -59,7 +64,10 @@ function OfferPanel({ offer }) {
     <ul className="text-1xl pl-2">
       {offer.Shops.map((shop, index) => (
         <li key={index} className="mb-2">
-          {shop.Name} - {shop.Distance} m
+          {shop.Name}
+          {shop.Distance == null
+            ? ""
+            : " à " + formatDistance(shop.Distance) + "m"}
         </li>
       ))}
     </ul>
@@ -69,7 +77,10 @@ function OfferPanel({ offer }) {
     <ul className="text-1xl pl-2">
       {offer.PublicTransports.map((transport, index) => (
         <li key={index} className="mb-2">
-          {transport.Name} - {transport.Distance} m
+          {transport.Type}: {transport.Name}
+          {transport.Distance == null
+            ? ""
+            : " à " + formatDistance(transport.Distance) + "m"}
         </li>
       ))}
     </ul>
@@ -79,7 +90,10 @@ function OfferPanel({ offer }) {
     <ul className="text-1xl pl-2">
       {offer.InterestPoints.map((point, index) => (
         <div key={index} className="mb-2">
-          {point.Type} - {point.Name} - {point.Distance} m
+          {point.Type}: {point.Name}
+          {point.Distance == null
+            ? ""
+            : " à " + formatDistance(point.Distance) + "m"}
         </div>
       ))}
     </ul>
@@ -103,7 +117,9 @@ function OfferPanel({ offer }) {
         <div className="text-1xl font-bold">Gérance</div>
         <div className="text-1xl">{offer.Management}</div>
       </div>
-      <div className="text-1xl font-bold mb-5">Structures environnantes</div>
+      <div className="text-1xl font-bold mb-5 mt-5">
+        Structures environnantes
+      </div>
       <div className="grid gap-1 grid-cols-2">
         <div className="text-1xl font-bold mb-4">
           Nombre d'écoles primaires à proximité

@@ -41,7 +41,7 @@ export function getOffers(size:number) {
 }
 
 // Get offers based on the different parameters
-export function getOffersFiltered(nbRooms:number, minSurface:number, maxSurface:number, minPrice:number, maxPrice:number, maxSchoolDistance:number, maxShopDistance:number, minMuseumNumber:number) {
+export function getOffersFiltered(nbRooms:number, minSurface:number, maxSurface:number, minPrice:number, maxPrice:number, maxSchoolDistance:number, maxShopDistance:number) {
   let query = "SELECT Title, Address, Description, Price, Type, NbRooms, Surface, Management, ImageUrls, AddressPrecise, ST_X(Coordinate), ST_Y(Coordinate), Shops, ARRAY_LENGTH(Schools) SchoolNumber, PublicTransports, InterestPoints FROM `tb-datalake-v1.offers_data_set.t_offers`";
   let parameters = [];
 
@@ -77,17 +77,17 @@ export function getOffersFiltered(nbRooms:number, minSurface:number, maxSurface:
     parameters.push(maxPrice);
   }
   if (maxSchoolDistance != -1) {
-    addAnd("EXISTS (SELECT 1 FROM UNNEST(schools) AS school WHERE school.distance <= ?)");
+    addAnd("EXISTS (SELECT 1 FROM UNNEST(schools) AS school WHERE school.distance <= ? AND (school.name LIKE '%primaire%' OR school.name LIKE '%Primaire%' ))");
     parameters.push(maxSchoolDistance);
   }
   if (maxShopDistance != -1) {
     addAnd("EXISTS (SELECT 1 FROM UNNEST(shops) AS shop WHERE shop.distance <= ?)");
     parameters.push(maxShopDistance);
   }
-  if (minMuseumNumber != -1) {
+  /*if (minMuseumNumber != -1) {
     addAnd("( SELECT COUNTIF(interestpoint.type = 'Musée') >= ? FROM UNNEST(InterestPoints) AS interestpoint )");
     parameters.push(minMuseumNumber);
-  }
+  }*/
 
 
   query = SQLString.format(query, parameters);
@@ -104,8 +104,7 @@ export async function GET(request: Request) {
   const maxPrice = searchParams.get(parametersNames[4])??-1;
   const maxSchoolDistance = searchParams.get(parametersNames[5])??-1;
   const maxShopDistance = searchParams.get(parametersNames[6])??-1;
-  const minMuseumNumber = searchParams.get(parametersNames[7])??-1;
-  const rows = await getOffersFiltered(+nbRooms, +minSurface, +maxSurface, +minPrice, +maxPrice, +maxSchoolDistance, +maxShopDistance, +minMuseumNumber);
+  const rows = await getOffersFiltered(+nbRooms, +minSurface, +maxSurface, +minPrice, +maxPrice, +maxSchoolDistance, +maxShopDistance);
 
   return NextResponse.json(rows);
 }
