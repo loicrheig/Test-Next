@@ -42,7 +42,7 @@ export function getOffers(size:number) {
 
 // Get offers based on the different parameters
 export function getOffersFiltered(nbRooms:number, minSurface:number, maxSurface:number, minPrice:number, maxPrice:number, maxSchoolDistance:number, maxShopDistance:number, minMuseumNumber:number) {
-  let query = "SELECT Title, Address, Description, Price, Type, NbRooms, Surface, Management, ImageUrls, AddressPrecise, ST_X(Coordinate), ST_Y(Coordinate), Shops, Schools, PublicTransports, InterestPoints FROM `tb-datalake-v1.offers_data_set.t_offers`";
+  let query = "SELECT Title, Address, Description, Price, Type, NbRooms, Surface, Management, ImageUrls, AddressPrecise, ST_X(Coordinate), ST_Y(Coordinate), Shops, ARRAY_LENGTH(Schools) SchoolNumber, PublicTransports, InterestPoints FROM `tb-datalake-v1.offers_data_set.t_offers`";
   let parameters = [];
 
   let firstParamPassed = false;

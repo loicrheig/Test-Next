@@ -53,20 +53,12 @@ function OfferPanel({ offer }) {
     ? offer.Price.toString() + " CHF"
     : parameterMissing;
 
-  const schoolsComponent = (
-    <ul className="text-1xl">
-      {offer.Schools.map((school, index) => (
-        <li key={index}>
-          {school.Name} - {school.Distance} m
-        </li>
-      ))}
-    </ul>
-  );
+  const schoolsComponent = <div>{offer.SchoolNumber}</div>;
 
   const shopsComponent = (
-    <ul className="text-1xl">
+    <ul className="text-1xl pl-2">
       {offer.Shops.map((shop, index) => (
-        <li key={index}>
+        <li key={index} className="mb-2">
           {shop.Name} - {shop.Distance} m
         </li>
       ))}
@@ -74,19 +66,19 @@ function OfferPanel({ offer }) {
   );
 
   const transportsComponent = (
-    <ul className="text-1xl">
+    <ul className="text-1xl pl-2">
       {offer.PublicTransports.map((transport, index) => (
-        <li key={index}>
+        <li key={index} className="mb-2">
           {transport.Name} - {transport.Distance} m
         </li>
       ))}
     </ul>
   );
 
-  const InterestPointsComponent = (
-    <ul className="text-1xl">
+  const interestPointsComponent = (
+    <ul className="text-1xl pl-2">
       {offer.InterestPoints.map((point, index) => (
-        <div key={index}>
+        <div key={index} className="mb-2">
           {point.Type} - {point.Name} - {point.Distance} m
         </div>
       ))}
@@ -113,14 +105,16 @@ function OfferPanel({ offer }) {
       </div>
       <div className="text-1xl font-bold mb-5">Structures environnantes</div>
       <div className="grid gap-1 grid-cols-2">
-        <div className="text-1xl font-bold">Ecoles</div>
+        <div className="text-1xl font-bold mb-4">
+          Nombre d'écoles primaires à proximité
+        </div>
         {schoolsComponent}
         <div className="text-1xl font-bold">Magasins</div>
-        {shopsComponent}
+        {contentScrollable(shopsComponent, false, "h-48")}
         <div className="text-1xl font-bold">Transports publiques</div>
-        {transportsComponent}
+        {contentScrollable(transportsComponent, false, "h-48")}
         <div className="text-1xl font-bold">Points d'intérêt</div>
-        {InterestPointsComponent}
+        {contentScrollable(interestPointsComponent, false, "h-48")}
       </div>
     </div>,
     true
