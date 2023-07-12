@@ -122,14 +122,14 @@ function OfferPanel({ offer }) {
       </div>
       <div className="grid gap-1 grid-cols-2">
         <div className="text-1xl font-bold mb-4">
-          Nombre d'écoles primaires à proximité
+          Nombre d&apos;écoles primaires à proximité
         </div>
         {schoolsComponent}
         <div className="text-1xl font-bold">Magasins</div>
         {contentScrollable(shopsComponent, false, "h-48")}
         <div className="text-1xl font-bold">Transports publiques</div>
         {contentScrollable(transportsComponent, false, "h-48")}
-        <div className="text-1xl font-bold">Points d'intérêt</div>
+        <div className="text-1xl font-bold">Points d&apos;intérêt</div>
         {contentScrollable(interestPointsComponent, false, "h-48")}
       </div>
     </div>,

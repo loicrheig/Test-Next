@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { parametersNames } from "../../app/api/offer/route.ts";
 
 function FilterPanel({ updateOffers, createMarkers }) {
@@ -13,7 +13,24 @@ function FilterPanel({ updateOffers, createMarkers }) {
     nbRooms: 0,
     schoolDistance: 0,
     shopDistance: 0,
+    transportType: "Tous",
+    transportDistance: 0,
   };
+
+  const [transportTypes, setTransportTypes] = useState([]);
+
+  useEffect(() => {
+    const url = new URL("/api/transport", window.location.origin);
+    fetch(url)
+      .then((res) => res.json())
+      .then((data) => {
+        let tmpArray = ["Tous"];
+        for (let i = 0; i < data.length; i++) {
+          tmpArray.push(data[i]["Type"]);
+        }
+        setTransportTypes(tmpArray);
+      });
+  }, []);
 
   const [filters, setFilters] = useState(nullFilter);
 
@@ -41,6 +58,12 @@ function FilterPanel({ updateOffers, createMarkers }) {
       }
       if (filters.shopDistance != 0) {
         url.searchParams.append(parametersNames[6], filters.shopDistance);
+      }
+      if (filters.transportType != "Tous") {
+        url.searchParams.append(parametersNames[7], filters.transportType);
+      }
+      if (filters.transportDistance != 0) {
+        url.searchParams.append(parametersNames[8], filters.transportDistance);
       }
 
       fetch(url)
@@ -73,6 +96,8 @@ function FilterPanel({ updateOffers, createMarkers }) {
       nbRooms: event.target.nbRooms.value,
       schoolDistance: event.target.schoolDistance.value,
       shopDistance: event.target.shopDistance.value,
+      transportType: event.target.transportType.value,
+      transportDistance: event.target.transportDistance.value,
     };
     setFilters(data);
   }
@@ -195,7 +220,7 @@ function FilterPanel({ updateOffers, createMarkers }) {
               }
             />
           </div>
-          <label>Nombre de pièces exactes</label>
+          <label>Nombre de pièces</label>
           <input
             className="w-1/2 text-center"
             type="number"
@@ -205,7 +230,8 @@ function FilterPanel({ updateOffers, createMarkers }) {
             name="nbRooms"
             defaultValue={filters.nbRooms ?? 0}
           />
-          <label>Distance max d'une école primaire</label>
+          <label className="col-span-2 text-center">Distance max</label>
+          <label>école primaire</label>
           <input
             className="w-1/2 text-center"
             type="number"
@@ -215,7 +241,7 @@ function FilterPanel({ updateOffers, createMarkers }) {
             name="schoolDistance"
             defaultValue={filters.schoolDistance ?? 0}
           />
-          <label>Distance max d'un supermarché</label>
+          <label>supermarché</label>
           <input
             className="w-1/2 text-center"
             type="number"
@@ -225,7 +251,31 @@ function FilterPanel({ updateOffers, createMarkers }) {
             name="shopDistance"
             defaultValue={filters.shopDistance ?? 0}
           />
-
+          <label className="col-span-2 text-center">
+            Distance max d&apos;un transport
+          </label>
+          <select name="transportType">
+            {transportTypes.map((transport) =>
+              transport === filters.transportType ? (
+                <option key={transport} value={transport} selected>
+                  {transport}
+                </option>
+              ) : (
+                <option key={transport} value={transport}>
+                  {transport}
+                </option>
+              )
+            )}
+          </select>
+          <input
+            className="w-1/2 text-center"
+            type="number"
+            min="0"
+            max="1000"
+            step={5}
+            name="transportDistance"
+            defaultValue={filters.transportDistance ?? 0}
+          />
           <input
             type="submit"
             value="Submit"

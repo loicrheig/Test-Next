@@ -1,6 +1,6 @@
-import { BigQuery } from "@google-cloud/bigquery"
 import { NextResponse } from "next/server"
 import SQLString from 'sqlstring'
+import { executeSelectQuery } from "../bigQuery/request"
 
 export const parametersNames = [
   'nbRooms',
@@ -10,30 +10,9 @@ export const parametersNames = [
   'maxPrice',
   'maxSchoolDistance',
   'maxShopDistance',
-  'minMuseumNumber',
+  'transportType',
+  'transportDistance',
 ]
-
-async function executeSelectQuery(query:string) {
-  const client = new BigQuery({
-    projectId: process.env.PROJECT_ID,
-    credentials: {
-      client_email: process.env.CLIENT_EMAIL,
-      client_id: process.env.CLIENT_ID,
-      private_key: process.env.PRIVATE_KEY
-    }
-  })
-
-  // Run the query as a job
-  const [job] = await client.createQueryJob({
-    query: query,
-    // Location must match that of the dataset(s) referenced in the query.
-    location: 'europe-west1'
-  });
-
-  // Wait for the query to finish
-  const [rows] = await job.getQueryResults();
-  return rows;
-}
 
 export function getOffers(size:number) {
   const query = SQLString.format("SELECT Title, Address, Description, Price, Type, NbRooms, Surface, Management, ImageUrls, AddressPrecise, ST_X(Coordinate), ST_Y(Coordinate) FROM `tb-datalake-v1.offers_data_set.t_offers` LIMIT ?", [size])
@@ -41,7 +20,7 @@ export function getOffers(size:number) {
 }
 
 // Get offers based on the different parameters
-export function getOffersFiltered(nbRooms:number, minSurface:number, maxSurface:number, minPrice:number, maxPrice:number, maxSchoolDistance:number, maxShopDistance:number) {
+export function getOffersFiltered(nbRooms:number, minSurface:number, maxSurface:number, minPrice:number, maxPrice:number, maxSchoolDistance:number, maxShopDistance:number, transportType:string, transportDistance:number) {
   let query = "SELECT Title, Address, Description, Price, Type, NbRooms, Surface, Management, ImageUrls, AddressPrecise, ST_X(Coordinate), ST_Y(Coordinate), Shops, ARRAY_LENGTH(Schools) SchoolNumber, PublicTransports, InterestPoints FROM `tb-datalake-v1.offers_data_set.t_offers`";
   let parameters = [];
 
@@ -84,10 +63,17 @@ export function getOffersFiltered(nbRooms:number, minSurface:number, maxSurface:
     addAnd("EXISTS (SELECT 1 FROM UNNEST(shops) AS shop WHERE shop.distance <= ?)");
     parameters.push(maxShopDistance);
   }
-  /*if (minMuseumNumber != -1) {
-    addAnd("( SELECT COUNTIF(interestpoint.type = 'Musée') >= ? FROM UNNEST(InterestPoints) AS interestpoint )");
-    parameters.push(minMuseumNumber);
-  }*/
+  if (transportDistance != -1) {
+    if (transportType == 'Tous') {
+      addAnd("EXISTS (SELECT 1 FROM UNNEST(publicTransports) AS publicTransport WHERE publicTransport.distance <= ?)");
+      parameters.push(transportDistance);
+    }
+    else {
+      addAnd("EXISTS (SELECT 1 FROM UNNEST(publicTransports) AS publicTransport WHERE publicTransport.distance <= ? AND publicTransport.type = ?)");
+      parameters.push(transportDistance);
+      parameters.push(transportType);
+    }
+  }
 
 
   query = SQLString.format(query, parameters);
@@ -104,7 +90,9 @@ export async function GET(request: Request) {
   const maxPrice = searchParams.get(parametersNames[4])??-1;
   const maxSchoolDistance = searchParams.get(parametersNames[5])??-1;
   const maxShopDistance = searchParams.get(parametersNames[6])??-1;
-  const rows = await getOffersFiltered(+nbRooms, +minSurface, +maxSurface, +minPrice, +maxPrice, +maxSchoolDistance, +maxShopDistance);
+  const transportType = searchParams.get(parametersNames[7])??"Tous";
+  const transportDistance = searchParams.get(parametersNames[8])??-1;
+  const rows = await getOffersFiltered(+nbRooms, +minSurface, +maxSurface, +minPrice, +maxPrice, +maxSchoolDistance, +maxShopDistance, transportType, +transportDistance);
 
   return NextResponse.json(rows);
 }
