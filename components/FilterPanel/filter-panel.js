@@ -108,7 +108,7 @@ function FilterPanel({ updateOffers, createMarkers }) {
       // The second request get the next 100 offers
       // And so on...
 
-      const limit = 100;
+      const limit = 300;
       url.searchParams.append("limit", limit);
 
       fetchOffers({
