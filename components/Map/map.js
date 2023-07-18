@@ -68,7 +68,7 @@ function SimpleMarker(props) {
   );
 }
 
-function createMarkers(offers) {
+function createMarkers(offers, offsetKey = 0) {
   const tmpRows = [];
   for (let i = 0; i < offers.length; i++) {
     // note: we are adding a key prop here to allow react to uniquely identify each
@@ -81,14 +81,18 @@ function createMarkers(offers) {
 
     if (offer.AddressPrecise) {
       tmpRows.push(
-        <SimpleMarker position={[offer.f1_, offer.f0_]} offer={offer} key={i} />
+        <SimpleMarker
+          position={[offer.f1_, offer.f0_]}
+          offer={offer}
+          key={i + offsetKey}
+        />
       );
     } else {
       tmpRows.push(
         <CircleMarkerWithState
           position={[offer.f1_, offer.f0_]}
           offer={offer}
-          key={i}
+          key={i + offsetKey}
         />
       );
     }
@@ -98,6 +102,13 @@ function createMarkers(offers) {
 
 function Map() {
   const [offers, setOffers] = useState([]);
+
+  function updateOffers(newOffers, clean = true) {
+    if (clean) {
+      setOffers([]);
+    }
+    setOffers((offers) => offers.concat(newOffers));
+  }
 
   // Coordonnées géographiques des limites de la Suisse
   var bounds = [
@@ -158,7 +169,10 @@ function Map() {
         </MapContainer>
       </div>
       <FilterButton>
-        <FilterPanel updateOffers={setOffers} createMarkers={createMarkers} />
+        <FilterPanel
+          updateOffers={updateOffers}
+          createMarkers={createMarkers}
+        />
       </FilterButton>
     </div>
   );

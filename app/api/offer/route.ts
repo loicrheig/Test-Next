@@ -20,7 +20,7 @@ export function getOffers(size:number) {
 }
 
 // Get offers based on the different parameters
-export function getOffersFiltered(nbRooms:number, minSurface:number, maxSurface:number, minPrice:number, maxPrice:number, maxSchoolDistance:number, maxShopDistance:number, transportType:string, transportDistance:number) {
+export function getOffersFiltered(nbRooms:number, minSurface:number, maxSurface:number, minPrice:number, maxPrice:number, maxSchoolDistance:number, maxShopDistance:number, transportType:string, transportDistance:number, limit:number, offset:number) {
   let query = "SELECT Title, Address, Description, Price, Type, NbRooms, Surface, Management, ImageUrls, AddressPrecise, ST_X(Coordinate), ST_Y(Coordinate), Shops, ARRAY_LENGTH(Schools) SchoolNumber, PublicTransports, InterestPoints FROM `tb-datalake-v1.offers_data_set.t_offers`";
   let parameters = [];
 
@@ -75,6 +75,15 @@ export function getOffersFiltered(nbRooms:number, minSurface:number, maxSurface:
     }
   }
 
+  if (limit != -1) {
+    query += "LIMIT ? ";
+    parameters.push(limit);
+  }
+
+  if (offset != -1) {
+    query += "OFFSET ? ";
+    parameters.push(offset);
+  }
 
   query = SQLString.format(query, parameters);
 
@@ -92,7 +101,9 @@ export async function GET(request: Request) {
   const maxShopDistance = searchParams.get(parametersNames[6])??-1;
   const transportType = searchParams.get(parametersNames[7])??"Tous";
   const transportDistance = searchParams.get(parametersNames[8])??-1;
-  const rows = await getOffersFiltered(+nbRooms, +minSurface, +maxSurface, +minPrice, +maxPrice, +maxSchoolDistance, +maxShopDistance, transportType, +transportDistance);
+  const limit = searchParams.get('limit')??-1;
+  const offset = searchParams.get('offset')??-1;
+  const rows = await getOffersFiltered(+nbRooms, +minSurface, +maxSurface, +minPrice, +maxPrice, +maxSchoolDistance, +maxShopDistance, transportType, +transportDistance, +limit, +offset);
 
   return NextResponse.json(rows);
 }

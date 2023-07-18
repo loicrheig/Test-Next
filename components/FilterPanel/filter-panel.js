@@ -1,5 +1,42 @@
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import { parametersNames } from "../../app/api/offer/route.ts";
+
+async function fetchOffers({
+  uri,
+  offset,
+  limit,
+  updateOffers,
+  createMarkers,
+}) {
+  const url = new URL(uri);
+  url.searchParams.append("offset", offset);
+
+  fetch(url)
+    .then((res) => res.json())
+    .then((data) => {
+      //updateOffers(data);
+      // If data is empty, we don't need to do the next request
+      if (data.length != 0) {
+        // Première itération, clean les markers
+        if (offset == 0) {
+          updateOffers(createMarkers(data, offset), true);
+        } else {
+          updateOffers(createMarkers(data, offset), false);
+        }
+        fetchOffers({
+          // Get the url string
+          uri: uri,
+          offset: offset + limit,
+          limit: limit,
+          updateOffers: updateOffers,
+          createMarkers: createMarkers,
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+}
 
 function FilterPanel({ updateOffers, createMarkers }) {
   const priceMin = 0;
@@ -20,7 +57,7 @@ function FilterPanel({ updateOffers, createMarkers }) {
   const [transportTypes, setTransportTypes] = useState([]);
 
   useEffect(() => {
-    const url = new URL("/api/transport", window.location.origin);
+    let url = new URL("/api/transport", window.location.origin);
     fetch(url)
       .then((res) => res.json())
       .then((data) => {
@@ -66,11 +103,22 @@ function FilterPanel({ updateOffers, createMarkers }) {
         url.searchParams.append(parametersNames[8], filters.transportDistance);
       }
 
-      fetch(url)
-        .then((res) => res.json())
-        .then((data) => {
-          updateOffers(createMarkers(data));
-        });
+      // The goal is too create sub request to the API to get the offers
+      // The first request get the first 100 offers
+      // The second request get the next 100 offers
+      // And so on...
+
+      const limit = 100;
+      url.searchParams.append("limit", limit);
+
+      fetchOffers({
+        // Get the url string
+        uri: url.toString(),
+        offset: 0,
+        limit: limit,
+        updateOffers: updateOffers,
+        createMarkers: createMarkers,
+      });
     }
   }, [filters]);
 
@@ -254,18 +302,12 @@ function FilterPanel({ updateOffers, createMarkers }) {
           <label className="col-span-2 text-center">
             Distance max d&apos;un transport
           </label>
-          <select name="transportType">
-            {transportTypes.map((transport) =>
-              transport === filters.transportType ? (
-                <option key={transport} value={transport} selected>
-                  {transport}
-                </option>
-              ) : (
-                <option key={transport} value={transport}>
-                  {transport}
-                </option>
-              )
-            )}
+          <select name="transportType" defaultValue={filters.transportType}>
+            {transportTypes.map((transport) => (
+              <option key={transport} value={transport}>
+                {transport}
+              </option>
+            ))}
           </select>
           <input
             className="w-1/2 text-center"
