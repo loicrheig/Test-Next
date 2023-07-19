@@ -11,8 +11,12 @@ import {
 
 import L from "leaflet";
 
-import { OfferPanel } from "../Offer/offer-panel.js";
-import { FilterPanel, FilterButton } from "../FilterPanel/filter-panel.js";
+import { OfferPanel } from "../Offer/offer.js";
+import {
+  FilterPanel,
+  FilterButton,
+  PanelWrapper,
+} from "../FilterPanel/filter-panel.js";
 import { useState } from "react";
 
 function contentScrollable(element, rightScroll, height = "h-full") {
@@ -127,7 +131,14 @@ function Map() {
   ];
 
   return (
-    <div>
+    <PanelWrapper
+      panel={
+        <FilterPanel
+          updateOffers={updateOffers}
+          createMarkers={createMarkers}
+        />
+      }
+    >
       <div id="map-container" className="w-full">
         <MapContainer
           center={[46.519962, 6.633597]}
@@ -178,14 +189,8 @@ function Map() {
           {offers}
         </MapContainer>
       </div>
-      <FilterButton>
-        <FilterPanel
-          updateOffers={updateOffers}
-          createMarkers={createMarkers}
-          contentScrollable={contentScrollable}
-        />
-      </FilterButton>
-    </div>
+      <FilterButton />
+    </PanelWrapper>
   );
 }
 

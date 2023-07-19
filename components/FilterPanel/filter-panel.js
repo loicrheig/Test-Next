@@ -1,6 +1,13 @@
 import { useState, useEffect } from "react";
-import { parametersNames } from "../../app/api/offer/route.ts";
-import styles from "./filter-panel.module.css";
+
+function debounce(func, delay) {
+  let debounceTimer;
+  return function (...args) {
+    const context = this;
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => func.apply(context, args), delay);
+  };
+}
 
 async function fetchOffers({
   uri,
@@ -39,25 +46,22 @@ async function fetchOffers({
     });
 }
 
-function FilterPanel({ updateOffers, createMarkers, contentScrollable }) {
-  const priceMin = 0;
-  const priceMax = 10000;
+const debounceFetchOffers = debounce(fetchOffers, 500);
 
-  // Check if the user is on mobile
-  const isOnMobile = window.innerWidth <= 800;
+const defaultFilters = {
+  minPrice: 0,
+  maxPrice: 0,
+  minSurface: 0,
+  maxSurface: 0,
+  nbRooms: 0,
+  schoolDistance: 0,
+  shopDistance: 0,
+  transportType: "Tous",
+  transportDistance: 0,
+};
 
-  const nullFilter = {
-    minPrice: 0,
-    maxPrice: 0,
-    minSurface: 0,
-    maxSurface: 0,
-    nbRooms: 0,
-    schoolDistance: 0,
-    shopDistance: 0,
-    transportType: "Tous",
-    transportDistance: 0,
-  };
-
+function FilterPanel({ updateOffers, createMarkers }) {
+  const [filters, setFilters] = useState(defaultFilters);
   const [transportTypes, setTransportTypes] = useState([]);
 
   useEffect(() => {
@@ -66,339 +70,273 @@ function FilterPanel({ updateOffers, createMarkers, contentScrollable }) {
       .then((res) => res.json())
       .then((data) => {
         let tmpArray = ["Tous"];
-        for (let i = 0; i < data.length; i++) {
-          tmpArray.push(data[i]["Type"]);
+        for (const element of data) {
+          tmpArray.push(element["Type"]);
         }
         setTransportTypes(tmpArray);
       });
   }, []);
 
-  const [filters, setFilters] = useState(nullFilter);
-
   useEffect(() => {
-    if (filters != nullFilter) {
-      const url = new URL("/api/offer", window.location.origin);
-
-      if (filters.nbRooms != 0) {
-        url.searchParams.append(parametersNames[0], filters.nbRooms);
+    const url = new URL("/api/offer", window.location.origin);
+    for (const key in filters) {
+      if (filters[key] !== defaultFilters[key]) {
+        url.searchParams.append(key, filters[key]);
       }
-      if (filters.minSurface != 0) {
-        url.searchParams.append(parametersNames[1], filters.minSurface);
-      }
-      if (filters.maxSurface != 0) {
-        url.searchParams.append(parametersNames[2], filters.maxSurface);
-      }
-      if (filters.minPrice != 0) {
-        url.searchParams.append(parametersNames[3], filters.minPrice);
-      }
-      if (filters.maxPrice != 0) {
-        url.searchParams.append(parametersNames[4], filters.maxPrice);
-      }
-      if (filters.schoolDistance != 0) {
-        url.searchParams.append(parametersNames[5], filters.schoolDistance);
-      }
-      if (filters.shopDistance != 0) {
-        url.searchParams.append(parametersNames[6], filters.shopDistance);
-      }
-      if (filters.transportType != "Tous") {
-        url.searchParams.append(parametersNames[7], filters.transportType);
-      }
-      if (filters.transportDistance != 0) {
-        url.searchParams.append(parametersNames[8], filters.transportDistance);
-      }
-
-      // The goal is too create sub request to the API to get the offers
-      // The first request get the first 100 offers
-      // The second request get the next 100 offers
-      // And so on...
-
-      const limit = 300;
-      url.searchParams.append("limit", limit);
-
-      fetchOffers({
-        // Get the url string
-        uri: url.toString(),
-        offset: 0,
-        limit: limit,
-        updateOffers: updateOffers,
-        createMarkers: createMarkers,
-      });
     }
+
+    const limit = 300;
+    url.searchParams.append("limit", limit);
+
+    debounceFetchOffers({
+      uri: url.toString(),
+      offset: 0,
+      limit: limit,
+      updateOffers: updateOffers,
+      createMarkers: createMarkers,
+    });
   }, [filters]);
 
-  // The value w-x for map-container need to be 1-X for slideover-container
+  const onChangeInput = (e) => {
+    const { name, value } = e.target;
+    setFilters((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
-  function toggleSlideover() {
-    document
-      .getElementById("slideover-container")
-      .classList.toggle("invisible");
-    document.getElementById("slideover").classList.toggle("translate-x-full");
-    document.getElementById("map-container").classList.toggle("w-3/4");
-    document.getElementById("map-container").classList.toggle("w-full");
-  }
+  const handleMaxSliderChange = (minField, maxField) => (e) => {
+    const value = +e.target.value;
+    setFilters((prev) => ({
+      ...prev,
+      [minField]: Math.min(prev[minField], value),
+      [maxField]: value,
+    }));
+  };
 
-  function onSubmit(event) {
-    toggleSlideover();
-    event.preventDefault();
-    const data = {
-      minPrice: event.target.minPrice.value,
-      maxPrice: event.target.maxPrice.value,
-      minSurface: event.target.minSurface.value,
-      maxSurface: event.target.maxSurface.value,
-      nbRooms: event.target.nbRooms.value,
-      schoolDistance: event.target.schoolDistance.value,
-      shopDistance: event.target.shopDistance.value,
-      transportType: event.target.transportType.value,
-      transportDistance: event.target.transportDistance.value,
-    };
-    setFilters(data);
-  }
+  const handleMinSliderChange = (minField, maxField) => (e) => {
+    const value = +e.target.value;
+    setFilters((prev) => ({
+      ...prev,
+      [minField]: value,
+      [maxField]: Math.max(prev[maxField], value),
+    }));
+  };
 
-  function changeMinSlider(setterMaxFunction, value, id) {
-    updateSlider(id, setterMaxFunction, value, "min");
-  }
+  const onSubmit = (e) => {
+    e.preventDefault();
+    const data = new FormData(e.target);
+    const formValues = Object.fromEntries(data.entries());
+    setFilters((prev) => ({
+      ...prev,
+      ...formValues,
+    }));
+  };
 
-  function changeMaxSlider(setterMinFunction, value, id) {
-    updateSlider(id, setterMinFunction, value, "max");
-  }
-
-  function updateSlider(inputId, setterFunction, value, mode) {
-    value = parseInt(value);
-    var inputElement = document.getElementById(inputId);
-    if (
-      (mode === "min" && value > parseInt(inputElement.value)) ||
-      (mode === "max" && value < parseInt(inputElement.value))
-    ) {
-      setterFunction(value);
-      inputElement.value = value;
-    }
-  }
-
-  function FilterForm() {
-    const [minPrice, setMinPrice] = useState(filters.minPrice ?? priceMin);
-    const [maxPrice, setMaxPrice] = useState(filters.maxPrice ?? priceMax);
-
-    const surfaceMin = 0;
-    const surfaceMax = 1000;
-    const [minSurface, setMinSurface] = useState(
-      filters.minSurface ?? surfaceMin
-    );
-    const [maxSurface, setMaxSurface] = useState(
-      filters.maxSurface ?? surfaceMax
-    );
-
-    // return a form filtering the map offers
-    return (
-      <div className="mt-10 ml-4 mr-4">
-        <img src="logo.svg" className="mb-4 p-2" />
-        {contentScrollable(
-          <form
-            className="p-4 border-4 bg-gray-200 rounded-md"
-            onSubmit={onSubmit}
-          >
-            <div className="grid gap-4 grid-cols-2 grid-rows-5">
-              <label className="col-span-2 text-center">Prix</label>
-              <label>Min {minPrice}.-</label>
-              <div>
+  return (
+    <div className="p-4 h-full bg-base-200 text-base-content w-full max-w-screen-sm">
+      <div className="flex flex-col h-full">
+        <div className="self-center">
+          <img src="logo.svg" className="max-w-sm w-full p-4" />
+        </div>
+        <form
+          className="flex-grow card bg-base-100 shadow-xl overflow-auto"
+          onSubmit={onSubmit}
+        >
+          <div className="card-body">
+            <h2 className="card-title">Filtres</h2>
+            <div className="grid gap-6">
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Prix</span>
+                </label>
+                <label className="label">
+                  <span className="label-text-alt">
+                    Min {filters.minPrice}.-
+                  </span>
+                </label>
                 <input
-                  value={minPrice}
-                  onChange={(e) => setMinPrice(e.target.value)}
-                  className="w-full"
+                  value={filters.minPrice}
+                  onChange={handleMinSliderChange("minPrice", "maxPrice")}
+                  className="range w-full input input-bordered"
                   type="range"
                   name="minPrice"
-                  min={priceMin}
-                  max={priceMax}
-                  step={5}
-                  id="minPriceInput"
-                  onMouseUp={(e) =>
-                    changeMinSlider(
-                      setMaxPrice,
-                      e.target.value,
-                      "maxPriceInput"
-                    )
-                  }
+                  min="0"
+                  max="10000"
+                  step="5"
                 />
-              </div>
-              <label>Max {maxPrice}.-</label>
-              <div>
+                <label className="label">
+                  <span className="label-text-alt">
+                    Max {filters.maxPrice}.-
+                  </span>
+                </label>
                 <input
-                  value={maxPrice}
-                  onChange={(e) => setMaxPrice(e.target.value)}
-                  className="w-full"
+                  value={filters.maxPrice}
+                  onChange={handleMaxSliderChange("minPrice", "maxPrice")}
+                  className="range w-full input input-bordered"
                   type="range"
                   name="maxPrice"
-                  min={priceMin}
-                  max={priceMax}
-                  step={5}
-                  id="maxPriceInput"
-                  onMouseUp={(e) =>
-                    changeMaxSlider(
-                      setMinPrice,
-                      e.target.value,
-                      "minPriceInput"
-                    )
-                  }
+                  min="0"
+                  max="10000"
+                  step="5"
                 />
               </div>
-              <label className="col-span-2 text-center">Surface</label>
-              <label>Min {minSurface} m2</label>
-              <div>
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Surface</span>
+                </label>
+                <label className="label">
+                  <span className="label-text-alt">
+                    Min {filters.minSurface} m2
+                  </span>
+                </label>
                 <input
-                  value={minSurface}
-                  onChange={(e) => setMinSurface(e.target.value)}
-                  className="w-full"
+                  value={filters.minSurface}
+                  onChange={handleMinSliderChange("minSurface", "maxSurface")}
+                  className="range w-full input input-bordered"
                   type="range"
                   name="minSurface"
-                  min={surfaceMin}
-                  max={surfaceMax}
-                  step={5}
-                  id="minSurfaceInput"
-                  onMouseUp={(e) =>
-                    changeMinSlider(
-                      setMaxSurface,
-                      e.target.value,
-                      "maxSurfaceInput"
-                    )
-                  }
+                  min="0"
+                  max="1000"
+                  step="5"
                 />
-              </div>
-              <label>Max {maxSurface} m2</label>
-              <div>
+                <label className="label">
+                  <span className="label-text-alt">
+                    Max {filters.maxSurface} m2
+                  </span>
+                </label>
                 <input
-                  value={maxSurface}
-                  onChange={(e) => setMaxSurface(e.target.value)}
-                  className="w-full"
+                  value={filters.maxSurface}
+                  onChange={handleMaxSliderChange("minSurface", "maxSurface")}
+                  className="range w-full input input-bordered"
                   type="range"
                   name="maxSurface"
-                  min={surfaceMin}
-                  max={surfaceMax}
-                  step={5}
-                  id="maxSurfaceInput"
-                  onMouseUp={(e) =>
-                    changeMaxSlider(
-                      setMinSurface,
-                      e.target.value,
-                      "minSurfaceInput"
-                    )
-                  }
+                  min="0"
+                  max="1000"
+                  step="5"
                 />
               </div>
-              <label>Nombre de pièces</label>
-              <input
-                className="w-1/2 text-center"
-                type="number"
-                min="0"
-                max="10"
-                step={0.5}
-                name="nbRooms"
-                defaultValue={filters.nbRooms ?? 0}
-              />
-              <label className="col-span-2 text-center">Distance max</label>
-              <label>école primaire</label>
-              <input
-                className="w-1/2 text-center"
-                type="number"
-                min="0"
-                max="1000"
-                step={5}
-                name="schoolDistance"
-                defaultValue={filters.schoolDistance ?? 0}
-              />
-              <label>supermarché</label>
-              <input
-                className="w-1/2 text-center"
-                type="number"
-                min="0"
-                max="1000"
-                step={5}
-                name="shopDistance"
-                defaultValue={filters.shopDistance ?? 0}
-              />
-              <label className="col-span-2 text-center">
-                Distance max d&apos;un transport
-              </label>
-              <select name="transportType" defaultValue={filters.transportType}>
-                {transportTypes.map((transport) => (
-                  <option key={transport} value={transport}>
-                    {transport}
-                  </option>
-                ))}
-              </select>
-              <input
-                className="w-1/2 text-center"
-                type="number"
-                min="0"
-                max="1000"
-                step={5}
-                name="transportDistance"
-                defaultValue={filters.transportDistance ?? 0}
-              />
-              <input
-                type="submit"
-                value="Submit"
-                className="col-span-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-              />
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Nombre de pièces</span>
+                </label>
+                <input
+                  className="input input-bordered w-full text-center"
+                  type="number"
+                  min="0"
+                  max="10"
+                  step={0.5}
+                  name="nbRooms"
+                  value={filters.nbRooms}
+                  onChange={onChangeInput}
+                />
+              </div>
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Distance max</span>
+                </label>
+                <label className="label">
+                  <span className="label-text-alt">école primaire</span>
+                </label>
+                <input
+                  className="input input-bordered w-full text-center"
+                  type="number"
+                  min="0"
+                  max="1000"
+                  step="5"
+                  name="schoolDistance"
+                  value={filters.schoolDistance}
+                  onChange={onChangeInput}
+                />
+                <label className="label">
+                  <span className="label-text-alt">supermarché</span>
+                </label>
+                <input
+                  className="input input-bordered w-full text-center"
+                  type="number"
+                  min="0"
+                  max="1000"
+                  step="5"
+                  name="shopDistance"
+                  value={filters.shopDistance}
+                  onChange={onChangeInput}
+                />
+              </div>
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">
+                    Distance max d&apos;un transport
+                  </span>
+                </label>
+                <label className="label">
+                  <span className="label-text-alt">Type</span>
+                </label>
+                <select
+                  name="transportType"
+                  value={filters.transportType}
+                  onChange={onChangeInput}
+                  className="select select-bordered w-full"
+                >
+                  {transportTypes.map((transport) => (
+                    <option key={transport} value={transport}>
+                      {transport}
+                    </option>
+                  ))}
+                </select>
+                <label className="label">
+                  <span className="label-text-alt">Distance</span>
+                </label>
+                <input
+                  className="input input-bordered w-full text-center"
+                  type="number"
+                  min="0"
+                  max="1000"
+                  step="5"
+                  name="transportDistance"
+                  value={filters.transportDistance}
+                  onChange={onChangeInput}
+                />
+              </div>
+              <div className="card-actions justify-end">
+                <input
+                  type="submit"
+                  value="Submit"
+                  className="btn btn-primary"
+                />
+              </div>
             </div>
-          </form>,
-          true,
-          styles.filterHeight
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <div
-        onClick={toggleSlideover}
-        className="cursor-pointer h-9 px-5 py-2 text-sm border bg-gray-50 text-gray-500 hover:bg-gray-100 rounded border-gray-300 select-none"
-      >
-        Filtre
-      </div>
-      <div
-        id="slideover-container"
-        className={
-          isOnMobile
-            ? "w-full h-full fixed invisible inset-y-0 right-0"
-            : "w-1/4 h-full fixed invisible inset-y-0 right-0"
-        }
-      >
-        <div
-          id="slideover"
-          className="w-full bg-white h-full absolute right-0 duration-300 ease-out transition-all translate-x-full"
-        >
-          <div
-            onClick={toggleSlideover}
-            className="absolute cursor-pointer text-gray-600 top-0 w-8 h-8 flex items-center justify-center right-0 mt-2 mr-2"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M6 18L18 6M6 6l12 12"
-              ></path>
-            </svg>
           </div>
-          <FilterForm />
-        </div>
+        </form>
       </div>
     </div>
   );
 }
 
-function FilterButton({ children }) {
+function FilterButton() {
   return (
     <div className="leaflet-bottom leaflet-left">
-      <div className="leaflet-control leaflet-bar">{children}</div>
+      <div className="leaflet-control">
+        <label htmlFor="my-drawer" className="btn btn-primary drawer-button">
+          Filtres
+        </label>
+      </div>
     </div>
   );
 }
 
-export { FilterPanel, FilterButton };
+function PanelWrapper({ children, panel }) {
+  return (
+    <div className="drawer drawer-end">
+      <input id="my-drawer" type="checkbox" className="drawer-toggle" />
+      <div className="drawer-content flex flex-col items-center justify-center">
+        {children}
+      </div>
+      <div className="drawer-side z-[1000]">
+        <label htmlFor="my-drawer" className="drawer-overlay"></label>
+        {panel}
+      </div>
+    </div>
+  );
+}
+
+export { PanelWrapper, FilterButton, FilterPanel };

@@ -1,4 +1,4 @@
-import styles from "./offer-panel.module.css";
+import styles from "./offer.module.css";
 
 const onImageError = (e) => {
   e.target.src = "/imgNotAvailable.png";
@@ -10,25 +10,11 @@ function formatDistance(distance) {
 }
 
 function OfferPanel({ offer, contentScrollable }) {
-  let descriptionComponent = <></>;
-  if (offer.Description.length > 100) {
-    descriptionComponent = contentScrollable(offer.Description, false, "h-48");
-  } else {
-    descriptionComponent = <div>{offer.Description}</div>;
-  }
-
   const imagesUrls =
     offer.ImageUrls != null &&
     offer.ImageUrls.map((imageUrl, index) => (
       <img key={index} src={imageUrl} onError={onImageError} />
     ));
-
-  const imagesComponent =
-    offer.ImageUrls != null && imagesUrls.length > 1 ? (
-      contentScrollable(imagesUrls, false, "h-64")
-    ) : (
-      <div className="mb-5">{imagesUrls}</div>
-    );
 
   const titleComponent = (
     <div className="text-2xl font-bold mb-5">
@@ -92,8 +78,16 @@ function OfferPanel({ offer, contentScrollable }) {
   return contentScrollable(
     <div className={styles.offerHeight}>
       {titleComponent}
-      {imagesComponent}
-      {descriptionComponent}
+      {offer.ImageUrls != null && imagesUrls.length > 1 ? (
+        contentScrollable(imagesUrls, false, "h-64")
+      ) : (
+        <div className="mb-5">{imagesUrls}</div>
+      )}
+      {offer.Description.length > 100 ? (
+        contentScrollable(offer.Description, false, "h-48")
+      ) : (
+        <div>{offer.Description}</div>
+      )}
       <div className="text-1xl font-bold mb-5">Informations techniques</div>
       <div className="grid gap-1 grid-cols-2">
         <div className="text-1xl font-bold">Type de bien</div>
