@@ -112,26 +112,13 @@ function FilterPanel({ updateOffers, createMarkers }) {
     }));
   };
 
-  const onSubmit = (e) => {
-    e.preventDefault();
-    const data = new FormData(e.target);
-    const formValues = Object.fromEntries(data.entries());
-    setFilters((prev) => ({
-      ...prev,
-      ...formValues,
-    }));
-  };
-
   return (
     <div className="p-4 h-full bg-base-200 text-base-content w-full max-w-screen-sm">
       <div className="flex flex-col h-full">
         <div className="self-center">
           <img src="logo.svg" className="max-w-sm w-full p-4" />
         </div>
-        <form
-          className="flex-grow card bg-base-100 shadow-xl overflow-auto"
-          onSubmit={onSubmit}
-        >
+        <form className="flex-grow card bg-base-100 shadow-xl overflow-auto">
           <div className="card-body">
             <h2 className="card-title">Filtres</h2>
             <div className="grid gap-6">
@@ -296,13 +283,6 @@ function FilterPanel({ updateOffers, createMarkers }) {
                   name={parametersNames[8]}
                   value={filters.transportDistance}
                   onChange={onChangeInput}
-                />
-              </div>
-              <div className="card-actions justify-end">
-                <input
-                  type="submit"
-                  value="Submit"
-                  className="btn btn-primary"
                 />
               </div>
             </div>
