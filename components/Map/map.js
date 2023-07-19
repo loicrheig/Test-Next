@@ -76,7 +76,7 @@ function SimpleMarker(props) {
       icon={getIcon(props.offer.AddressPrecise)}
     >
       <Popup maxWidth={popupWidth}>
-        <OfferPanel offer={props.offer} />
+        <OfferPanel offer={props.offer} contentScrollable={contentScrollable} />
       </Popup>
     </Marker>
   );
