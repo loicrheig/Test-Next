@@ -15,6 +15,16 @@ import { OfferPanel } from "../Offer/offer-panel.js";
 import { FilterPanel, FilterButton } from "../FilterPanel/filter-panel.js";
 import { useState } from "react";
 
+function contentScrollable(element, rightScroll, height = "h-full") {
+  let containerClassName = "overflow-y-auto " + height + " mb-5 " + rightScroll;
+
+  if (!rightScroll) {
+    containerClassName += " direction-rtl";
+  }
+
+  return <div className={containerClassName}>{element}</div>;
+}
+
 function getIcon(isAdressPrecise) {
   if (isAdressPrecise) {
     return L.icon({
@@ -47,7 +57,7 @@ function CircleMarkerWithState(props) {
       eventHandlers={{ click: activateCircle }}
     >
       <Popup maxWidth={popupWidth}>
-        <OfferPanel offer={props.offer} />
+        <OfferPanel offer={props.offer} contentScrollable={contentScrollable} />
       </Popup>
       {showCircle && <Circle center={props.position} radius={1000} />}
     </Marker>
@@ -172,6 +182,7 @@ function Map() {
         <FilterPanel
           updateOffers={updateOffers}
           createMarkers={createMarkers}
+          contentScrollable={contentScrollable}
         />
       </FilterButton>
     </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { parametersNames } from "../../app/api/offer/route.ts";
+import styles from "./filter-panel.module.css";
 
 async function fetchOffers({
   uri,
@@ -38,9 +39,12 @@ async function fetchOffers({
     });
 }
 
-function FilterPanel({ updateOffers, createMarkers }) {
+function FilterPanel({ updateOffers, createMarkers, contentScrollable }) {
   const priceMin = 0;
   const priceMax = 10000;
+
+  // Check if the user is on mobile
+  const isOnMobile = window.innerWidth <= 800;
 
   const nullFilter = {
     minPrice: 0,
@@ -185,146 +189,161 @@ function FilterPanel({ updateOffers, createMarkers }) {
 
     // return a form filtering the map offers
     return (
-      <form
-        className="mt-20 ml-4 mr-4 p-4 border-4 bg-gray-200 rounded-md"
-        onSubmit={onSubmit}
-      >
-        <div className="grid gap-4 grid-cols-2 grid-rows-5">
-          <label className="col-span-2 text-center">Prix</label>
-          <label>Min {minPrice}.-</label>
-          <div>
-            <input
-              value={minPrice}
-              onChange={(e) => setMinPrice(e.target.value)}
-              className="w-full"
-              type="range"
-              name="minPrice"
-              min={priceMin}
-              max={priceMax}
-              step={5}
-              id="minPriceInput"
-              onMouseUp={(e) =>
-                changeMinSlider(setMaxPrice, e.target.value, "maxPriceInput")
-              }
-            />
-          </div>
-          <label>Max {maxPrice}.-</label>
-          <div>
-            <input
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value)}
-              className="w-full"
-              type="range"
-              name="maxPrice"
-              min={priceMin}
-              max={priceMax}
-              step={5}
-              id="maxPriceInput"
-              onMouseUp={(e) =>
-                changeMaxSlider(setMinPrice, e.target.value, "minPriceInput")
-              }
-            />
-          </div>
-          <label className="col-span-2 text-center">Surface</label>
-          <label>Min {minSurface} m2</label>
-          <div>
-            <input
-              value={minSurface}
-              onChange={(e) => setMinSurface(e.target.value)}
-              className="w-full"
-              type="range"
-              name="minSurface"
-              min={surfaceMin}
-              max={surfaceMax}
-              step={5}
-              id="minSurfaceInput"
-              onMouseUp={(e) =>
-                changeMinSlider(
-                  setMaxSurface,
-                  e.target.value,
-                  "maxSurfaceInput"
-                )
-              }
-            />
-          </div>
-          <label>Max {maxSurface} m2</label>
-          <div>
-            <input
-              value={maxSurface}
-              onChange={(e) => setMaxSurface(e.target.value)}
-              className="w-full"
-              type="range"
-              name="maxSurface"
-              min={surfaceMin}
-              max={surfaceMax}
-              step={5}
-              id="maxSurfaceInput"
-              onMouseUp={(e) =>
-                changeMaxSlider(
-                  setMinSurface,
-                  e.target.value,
-                  "minSurfaceInput"
-                )
-              }
-            />
-          </div>
-          <label>Nombre de pièces</label>
-          <input
-            className="w-1/2 text-center"
-            type="number"
-            min="0"
-            max="10"
-            step={0.5}
-            name="nbRooms"
-            defaultValue={filters.nbRooms ?? 0}
-          />
-          <label className="col-span-2 text-center">Distance max</label>
-          <label>école primaire</label>
-          <input
-            className="w-1/2 text-center"
-            type="number"
-            min="0"
-            max="1000"
-            step={5}
-            name="schoolDistance"
-            defaultValue={filters.schoolDistance ?? 0}
-          />
-          <label>supermarché</label>
-          <input
-            className="w-1/2 text-center"
-            type="number"
-            min="0"
-            max="1000"
-            step={5}
-            name="shopDistance"
-            defaultValue={filters.shopDistance ?? 0}
-          />
-          <label className="col-span-2 text-center">
-            Distance max d&apos;un transport
-          </label>
-          <select name="transportType" defaultValue={filters.transportType}>
-            {transportTypes.map((transport) => (
-              <option key={transport} value={transport}>
-                {transport}
-              </option>
-            ))}
-          </select>
-          <input
-            className="w-1/2 text-center"
-            type="number"
-            min="0"
-            max="1000"
-            step={5}
-            name="transportDistance"
-            defaultValue={filters.transportDistance ?? 0}
-          />
-          <input
-            type="submit"
-            value="Submit"
-            className="col-span-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          />
-        </div>
-      </form>
+      <div className="mt-10 ml-4 mr-4">
+        <img src="logo.svg" className="mb-4 p-2" />
+        {contentScrollable(
+          <form
+            className="p-4 border-4 bg-gray-200 rounded-md"
+            onSubmit={onSubmit}
+          >
+            <div className="grid gap-4 grid-cols-2 grid-rows-5">
+              <label className="col-span-2 text-center">Prix</label>
+              <label>Min {minPrice}.-</label>
+              <div>
+                <input
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                  className="w-full"
+                  type="range"
+                  name="minPrice"
+                  min={priceMin}
+                  max={priceMax}
+                  step={5}
+                  id="minPriceInput"
+                  onMouseUp={(e) =>
+                    changeMinSlider(
+                      setMaxPrice,
+                      e.target.value,
+                      "maxPriceInput"
+                    )
+                  }
+                />
+              </div>
+              <label>Max {maxPrice}.-</label>
+              <div>
+                <input
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  className="w-full"
+                  type="range"
+                  name="maxPrice"
+                  min={priceMin}
+                  max={priceMax}
+                  step={5}
+                  id="maxPriceInput"
+                  onMouseUp={(e) =>
+                    changeMaxSlider(
+                      setMinPrice,
+                      e.target.value,
+                      "minPriceInput"
+                    )
+                  }
+                />
+              </div>
+              <label className="col-span-2 text-center">Surface</label>
+              <label>Min {minSurface} m2</label>
+              <div>
+                <input
+                  value={minSurface}
+                  onChange={(e) => setMinSurface(e.target.value)}
+                  className="w-full"
+                  type="range"
+                  name="minSurface"
+                  min={surfaceMin}
+                  max={surfaceMax}
+                  step={5}
+                  id="minSurfaceInput"
+                  onMouseUp={(e) =>
+                    changeMinSlider(
+                      setMaxSurface,
+                      e.target.value,
+                      "maxSurfaceInput"
+                    )
+                  }
+                />
+              </div>
+              <label>Max {maxSurface} m2</label>
+              <div>
+                <input
+                  value={maxSurface}
+                  onChange={(e) => setMaxSurface(e.target.value)}
+                  className="w-full"
+                  type="range"
+                  name="maxSurface"
+                  min={surfaceMin}
+                  max={surfaceMax}
+                  step={5}
+                  id="maxSurfaceInput"
+                  onMouseUp={(e) =>
+                    changeMaxSlider(
+                      setMinSurface,
+                      e.target.value,
+                      "minSurfaceInput"
+                    )
+                  }
+                />
+              </div>
+              <label>Nombre de pièces</label>
+              <input
+                className="w-1/2 text-center"
+                type="number"
+                min="0"
+                max="10"
+                step={0.5}
+                name="nbRooms"
+                defaultValue={filters.nbRooms ?? 0}
+              />
+              <label className="col-span-2 text-center">Distance max</label>
+              <label>école primaire</label>
+              <input
+                className="w-1/2 text-center"
+                type="number"
+                min="0"
+                max="1000"
+                step={5}
+                name="schoolDistance"
+                defaultValue={filters.schoolDistance ?? 0}
+              />
+              <label>supermarché</label>
+              <input
+                className="w-1/2 text-center"
+                type="number"
+                min="0"
+                max="1000"
+                step={5}
+                name="shopDistance"
+                defaultValue={filters.shopDistance ?? 0}
+              />
+              <label className="col-span-2 text-center">
+                Distance max d&apos;un transport
+              </label>
+              <select name="transportType" defaultValue={filters.transportType}>
+                {transportTypes.map((transport) => (
+                  <option key={transport} value={transport}>
+                    {transport}
+                  </option>
+                ))}
+              </select>
+              <input
+                className="w-1/2 text-center"
+                type="number"
+                min="0"
+                max="1000"
+                step={5}
+                name="transportDistance"
+                defaultValue={filters.transportDistance ?? 0}
+              />
+              <input
+                type="submit"
+                value="Submit"
+                className="col-span-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              />
+            </div>
+          </form>,
+          true,
+          styles.filterHeight
+        )}
+      </div>
     );
   }
 
@@ -338,7 +357,11 @@ function FilterPanel({ updateOffers, createMarkers }) {
       </div>
       <div
         id="slideover-container"
-        className="w-1/4 h-full fixed invisible inset-y-0 right-0"
+        className={
+          isOnMobile
+            ? "w-full h-full fixed invisible inset-y-0 right-0"
+            : "w-1/4 h-full fixed invisible inset-y-0 right-0"
+        }
       >
         <div
           id="slideover"

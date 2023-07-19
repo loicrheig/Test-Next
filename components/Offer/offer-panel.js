@@ -1,15 +1,5 @@
 import styles from "./offer-panel.module.css";
 
-function contentScrollable(element, rightScroll, height = "h-full") {
-  let containerClassName = "overflow-y-auto " + height + " mb-5 " + rightScroll;
-
-  if (!rightScroll) {
-    containerClassName += " " + styles.leftScroll;
-  }
-
-  return <div className={containerClassName}>{element}</div>;
-}
-
 const onImageError = (e) => {
   e.target.src = "/imgNotAvailable.png";
 };
@@ -19,7 +9,7 @@ function formatDistance(distance) {
   return Math.round(distance / 5) * 5;
 }
 
-function OfferPanel({ offer }) {
+function OfferPanel({ offer, contentScrollable }) {
   let descriptionComponent = <></>;
   if (offer.Description.length > 100) {
     descriptionComponent = contentScrollable(offer.Description, false, "h-48");
