@@ -4,10 +4,10 @@ import { executeSelectQuery } from "../bigQuery/request"
 
 export const parametersDefault = {
   nbRooms : 0,
-  minSurface : 0,
-  maxSurface : 0,
   minPrice : 0,
   maxPrice : 0,
+  minSurface : 0,
+  maxSurface : 0,
   maxSchoolDistance : 0,
   maxShopDistance : 0,
   transportType : 'Tous',
@@ -95,10 +95,10 @@ export function getOffersFiltered(nbRooms:number, minSurface:number, maxSurface:
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const nbRooms = searchParams.get(parametersNames[0])??-1;
-  const minSurface = searchParams.get(parametersNames[1])??-1;
-  const maxSurface = searchParams.get(parametersNames[2])??-1;
-  const minPrice = searchParams.get(parametersNames[3])??-1;
-  const maxPrice = searchParams.get(parametersNames[4])??-1;
+  const minPrice = searchParams.get(parametersNames[1])??-1;
+  const maxPrice = searchParams.get(parametersNames[2])??-1;
+  const minSurface = searchParams.get(parametersNames[3])??-1;
+  const maxSurface = searchParams.get(parametersNames[4])??-1;
   const maxSchoolDistance = searchParams.get(parametersNames[5])??-1;
   const maxShopDistance = searchParams.get(parametersNames[6])??-1;
   const transportType = searchParams.get(parametersNames[7])??"Tous";
