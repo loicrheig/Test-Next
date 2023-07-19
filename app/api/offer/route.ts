@@ -2,17 +2,19 @@ import { NextResponse } from "next/server"
 import SQLString from 'sqlstring'
 import { executeSelectQuery } from "../bigQuery/request"
 
-export const parametersNames = [
-  'nbRooms',
-  'minSurface',
-  'maxSurface',
-  'minPrice',
-  'maxPrice',
-  'maxSchoolDistance',
-  'maxShopDistance',
-  'transportType',
-  'transportDistance',
-]
+export const parametersDefault = {
+  nbRooms : 0,
+  minSurface : 0,
+  maxSurface : 0,
+  minPrice : 0,
+  maxPrice : 0,
+  maxSchoolDistance : 0,
+  maxShopDistance : 0,
+  transportType : 'Tous',
+  transportDistance : 0,
+}
+
+export const parametersNames = Object.keys(parametersDefault);
 
 export function getOffers(size:number) {
   const query = SQLString.format("SELECT Title, Address, Description, Price, Type, NbRooms, Surface, Management, ImageUrls, AddressPrecise, ST_X(Coordinate), ST_Y(Coordinate) FROM `tb-datalake-v1.offers_data_set.t_offers` LIMIT ?", [size])

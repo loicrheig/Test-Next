@@ -1,4 +1,8 @@
 import { useState, useEffect } from "react";
+import {
+  parametersDefault,
+  parametersNames,
+} from "../../app/api/offer/route.ts";
 
 function debounce(func, delay) {
   let debounceTimer;
@@ -24,22 +28,20 @@ async function fetchOffers({
     .then((data) => {
       //updateOffers(data);
       // If data is empty, we don't need to do the next request
-      if (data.length != 0) {
-        // Première itération, clean les markers
-        if (offset == 0) {
-          updateOffers(createMarkers(data, offset), true);
-        } else {
-          updateOffers(createMarkers(data, offset), false);
-        }
-        fetchOffers({
-          // Get the url string
-          uri: uri,
-          offset: offset + limit,
-          limit: limit,
-          updateOffers: updateOffers,
-          createMarkers: createMarkers,
-        });
+      // Première itération, clean les markers
+      if (offset == 0) {
+        updateOffers(createMarkers(data, offset), true);
+      } else {
+        updateOffers(createMarkers(data, offset), false);
       }
+      fetchOffers({
+        // Get the url string
+        uri: uri,
+        offset: offset + limit,
+        limit: limit,
+        updateOffers: updateOffers,
+        createMarkers: createMarkers,
+      });
     })
     .catch((err) => {
       console.log(err);
@@ -47,21 +49,8 @@ async function fetchOffers({
 }
 
 const debounceFetchOffers = debounce(fetchOffers, 500);
-
-const defaultFilters = {
-  minPrice: 0,
-  maxPrice: 0,
-  minSurface: 0,
-  maxSurface: 0,
-  nbRooms: 0,
-  schoolDistance: 0,
-  shopDistance: 0,
-  transportType: "Tous",
-  transportDistance: 0,
-};
-
 function FilterPanel({ updateOffers, createMarkers }) {
-  const [filters, setFilters] = useState(defaultFilters);
+  const [filters, setFilters] = useState(parametersDefault);
   const [transportTypes, setTransportTypes] = useState([]);
 
   useEffect(() => {
@@ -80,7 +69,7 @@ function FilterPanel({ updateOffers, createMarkers }) {
   useEffect(() => {
     const url = new URL("/api/offer", window.location.origin);
     for (const key in filters) {
-      if (filters[key] !== defaultFilters[key]) {
+      if (filters[key] != parametersDefault[key]) {
         url.searchParams.append(key, filters[key]);
       }
     }
@@ -157,10 +146,13 @@ function FilterPanel({ updateOffers, createMarkers }) {
                 </label>
                 <input
                   value={filters.minPrice}
-                  onChange={handleMinSliderChange("minPrice", "maxPrice")}
+                  onChange={handleMinSliderChange(
+                    parametersNames[1],
+                    parametersNames[2]
+                  )}
                   className="range w-full input input-bordered"
                   type="range"
-                  name="minPrice"
+                  name={parametersNames[1]}
                   min="0"
                   max="10000"
                   step="5"
@@ -172,10 +164,13 @@ function FilterPanel({ updateOffers, createMarkers }) {
                 </label>
                 <input
                   value={filters.maxPrice}
-                  onChange={handleMaxSliderChange("minPrice", "maxPrice")}
+                  onChange={handleMaxSliderChange(
+                    parametersNames[1],
+                    parametersNames[2]
+                  )}
                   className="range w-full input input-bordered"
                   type="range"
-                  name="maxPrice"
+                  name={parametersNames[2]}
                   min="0"
                   max="10000"
                   step="5"
@@ -192,10 +187,13 @@ function FilterPanel({ updateOffers, createMarkers }) {
                 </label>
                 <input
                   value={filters.minSurface}
-                  onChange={handleMinSliderChange("minSurface", "maxSurface")}
+                  onChange={handleMinSliderChange(
+                    parametersNames[3],
+                    parametersNames[4]
+                  )}
                   className="range w-full input input-bordered"
                   type="range"
-                  name="minSurface"
+                  name={parametersNames[3]}
                   min="0"
                   max="1000"
                   step="5"
@@ -207,10 +205,13 @@ function FilterPanel({ updateOffers, createMarkers }) {
                 </label>
                 <input
                   value={filters.maxSurface}
-                  onChange={handleMaxSliderChange("minSurface", "maxSurface")}
+                  onChange={handleMaxSliderChange(
+                    parametersNames[3],
+                    parametersNames[4]
+                  )}
                   className="range w-full input input-bordered"
                   type="range"
-                  name="maxSurface"
+                  name={parametersNames[4]}
                   min="0"
                   max="1000"
                   step="5"
@@ -226,7 +227,7 @@ function FilterPanel({ updateOffers, createMarkers }) {
                   min="0"
                   max="10"
                   step={0.5}
-                  name="nbRooms"
+                  name={parametersNames[0]}
                   value={filters.nbRooms}
                   onChange={onChangeInput}
                 />
@@ -244,8 +245,8 @@ function FilterPanel({ updateOffers, createMarkers }) {
                   min="0"
                   max="1000"
                   step="5"
-                  name="schoolDistance"
-                  value={filters.schoolDistance}
+                  name={parametersNames[5]}
+                  value={filters.maxSchoolDistance}
                   onChange={onChangeInput}
                 />
                 <label className="label">
@@ -257,8 +258,8 @@ function FilterPanel({ updateOffers, createMarkers }) {
                   min="0"
                   max="1000"
                   step="5"
-                  name="shopDistance"
-                  value={filters.shopDistance}
+                  name={parametersNames[6]}
+                  value={filters.maxShopDistance}
                   onChange={onChangeInput}
                 />
               </div>
@@ -272,7 +273,7 @@ function FilterPanel({ updateOffers, createMarkers }) {
                   <span className="label-text-alt">Type</span>
                 </label>
                 <select
-                  name="transportType"
+                  name={parametersNames[7]}
                   value={filters.transportType}
                   onChange={onChangeInput}
                   className="select select-bordered w-full"
@@ -292,7 +293,7 @@ function FilterPanel({ updateOffers, createMarkers }) {
                   min="0"
                   max="1000"
                   step="5"
-                  name="transportDistance"
+                  name={parametersNames[8]}
                   value={filters.transportDistance}
                   onChange={onChangeInput}
                 />
