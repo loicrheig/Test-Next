@@ -20,6 +20,13 @@ function debounce(func, delay) {
   };
 }
 
+// Id global pour éviter que les requêtes ne se chevauchent
+let globalId = 0;
+const getId = () => {
+  globalId++;
+  return globalId;
+};
+
 /**
  * Fonction allant récupérer les offres sur le serveur.
  * Et mettant à jour l'état des offres à afficher.
@@ -28,6 +35,7 @@ function debounce(func, delay) {
  * @param limit Le nombre d'offres à récupérer
  * @param updateOffers La fonction pour mettre à jour les offres
  * @param createMarkers La fonction pour créer les markers
+ * @param id L'id de la requête
  */
 async function fetchOffers({
   uri,
@@ -35,7 +43,20 @@ async function fetchOffers({
   limit,
   updateOffers,
   createMarkers,
+  id = null,
 }) {
+  if (id == null) {
+    id = getId();
+  }
+  // Si l'id de la requête est différent de l'id global, cela signifie que
+  // cette requête est une ancienne requête qui n'avait pas été terminée
+  else if (id != globalId) {
+    console.log("id != globalId");
+    console.log(id);
+    console.log(globalId);
+    return;
+  }
+
   const url = new URL(uri);
   url.searchParams.append("offset", offset);
 
@@ -57,6 +78,7 @@ async function fetchOffers({
         limit: limit,
         updateOffers: updateOffers,
         createMarkers: createMarkers,
+        id: id,
       });
     })
     .catch((err) => {
