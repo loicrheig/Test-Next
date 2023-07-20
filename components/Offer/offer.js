@@ -1,14 +1,21 @@
 import styles from "./offer.module.css";
 
+// Change l'image par défaut si l'image de l'offre n'est pas disponible
 const onImageError = (e) => {
   e.target.src = "/imgNotAvailable.png";
 };
 
+// Formate la distance pour qu'elle soit un multiple de 5
 function formatDistance(distance) {
-  // Format la distance pour qu'elle ait un step de 5
   return Math.round(distance / 5) * 5;
 }
 
+/**
+ * Affiche les informations d'une offre dans un panneau
+ * @param offer L'offre à afficher
+ * @param contentScrollable Fonction qui permet de rendre le contenu scrollable
+ * @returns Le panneau contenant les informations de l'offre en JSX
+ */
 function OfferPanel({ offer, contentScrollable }) {
   const imagesUrls =
     offer.ImageUrls != null &&
@@ -27,12 +34,8 @@ function OfferPanel({ offer, contentScrollable }) {
   offer.Type = offer.Type || parameterMissing;
   offer.NbRooms = offer.NbRooms || parameterMissing;
   offer.Management = offer.Management || parameterMissing;
-  offer.Surface = offer.Surface
-    ? offer.Surface.toString() + " m²"
-    : parameterMissing;
-  offer.Price = offer.Price
-    ? offer.Price.toString() + " CHF"
-    : parameterMissing;
+  offer.Surface = offer.Surface ? offer.Surface.toString() : parameterMissing;
+  offer.Price = offer.Price ? offer.Price.toString() : parameterMissing;
 
   const schoolsComponent = <div>{offer.SchoolNumber}</div>;
 
@@ -93,9 +96,9 @@ function OfferPanel({ offer, contentScrollable }) {
         <div className="text-1xl font-bold">Type de bien</div>
         <div className="text-1xl">{offer.Type}</div>
         <div className="text-1xl font-bold">Surface</div>
-        <div className="text-1xl">{offer.Surface}</div>
+        <div className="text-1xl">{offer.Surface} m2</div>
         <div className="text-1xl font-bold">Prix</div>
-        <div className="text-1xl">{offer.Price}</div>
+        <div className="text-1xl">{offer.Price} CHF</div>
         <div className="text-1xl font-bold">Nombre de pièces</div>
         <div className="text-1xl">{offer.NbRooms}</div>
         <div className="text-1xl font-bold">Gérance</div>

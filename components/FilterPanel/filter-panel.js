@@ -4,6 +4,13 @@ import {
   parametersNames,
 } from "../../app/api/offer/route.ts";
 
+/**
+ * Fonction qui permet de faire un debounce sur une fonction.
+ * Cela afin d'éviter de faire trop de requêtes non-voulues au serveur.
+ * @param {*} func La fonction à appeler
+ * @param {*} delay Le délai en ms
+ * @returns La fonction à appeler
+ */
 function debounce(func, delay) {
   let debounceTimer;
   return function (...args) {
@@ -13,6 +20,15 @@ function debounce(func, delay) {
   };
 }
 
+/**
+ * Fonction allant récupérer les offres sur le serveur.
+ * Et mettant à jour l'état des offres à afficher.
+ * @param uri L'url de la requête
+ * @param offset L'offset de la requête
+ * @param limit Le nombre d'offres à récupérer
+ * @param updateOffers La fonction pour mettre à jour les offres
+ * @param createMarkers La fonction pour créer les markers
+ */
 async function fetchOffers({
   uri,
   offset,
@@ -26,16 +42,16 @@ async function fetchOffers({
   fetch(url)
     .then((res) => res.json())
     .then((data) => {
-      //updateOffers(data);
-      // If data is empty, we don't need to do the next request
-      // Première itération, clean les markers
+      // Première itération, clean les anciens markers
+      // Sinon, si la requête n'a pas retourné d'offres, la récursion s'arrête
       if (offset == 0) {
         updateOffers(createMarkers(data, offset), true);
-      } else {
+      } else if (data.length > 0) {
         updateOffers(createMarkers(data, offset), false);
+      } else {
+        return;
       }
       fetchOffers({
-        // Get the url string
         uri: uri,
         offset: offset + limit,
         limit: limit,
@@ -48,11 +64,20 @@ async function fetchOffers({
     });
 }
 
+// Déclaration de la fonction fetchOffers avec un debounce de 500ms
 const debounceFetchOffers = debounce(fetchOffers, 500);
+
+/**
+ * Panneau de filtres ressemblant à un formulaire.
+ * @param updateOffers La fonction pour mettre à jour les offres (setter de l'état des offres)
+ * @param createMarkers La fonction pour créer les markers
+ * @returns Le panneau de filtres en JSX
+ */
 function FilterPanel({ updateOffers, createMarkers }) {
   const [filters, setFilters] = useState(parametersDefault);
   const [transportTypes, setTransportTypes] = useState([]);
 
+  // Au moment du chargement du composant, récupère les types de transports
   useEffect(() => {
     let url = new URL("/api/transport", window.location.origin);
     fetch(url)
@@ -66,6 +91,8 @@ function FilterPanel({ updateOffers, createMarkers }) {
       });
   }, []);
 
+  // A chaque changement des filtres, un nouvel url est créé
+  // Et les offres sont récupérées
   useEffect(() => {
     const url = new URL("/api/offer", window.location.origin);
     for (const key in filters) {
@@ -74,6 +101,8 @@ function FilterPanel({ updateOffers, createMarkers }) {
       }
     }
 
+    // Nombre d'offres à récupérer à chaque requête
+    // Afin de ne pas surcharger le serveur
     const limit = 300;
     url.searchParams.append("limit", limit);
 
@@ -86,6 +115,8 @@ function FilterPanel({ updateOffers, createMarkers }) {
     });
   }, [filters]);
 
+  // Exécuté à chaque modification d'un input
+  // Met à jour les filtres
   const onChangeInput = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({
@@ -94,6 +125,7 @@ function FilterPanel({ updateOffers, createMarkers }) {
     }));
   };
 
+  // Fonctions permettant d'éviter que le min soit supérieur au max et vice-versa
   const handleMaxSliderChange = (minField, maxField) => (e) => {
     const value = +e.target.value;
     setFilters((prev) => ({
@@ -102,7 +134,6 @@ function FilterPanel({ updateOffers, createMarkers }) {
       [maxField]: value,
     }));
   };
-
   const handleMinSliderChange = (minField, maxField) => (e) => {
     const value = +e.target.value;
     setFilters((prev) => ({
@@ -118,7 +149,7 @@ function FilterPanel({ updateOffers, createMarkers }) {
         <div className="self-center">
           <img src="logo.svg" className="max-w-sm w-full p-4" />
         </div>
-        <form className="flex-grow card bg-base-100 shadow-xl overflow-auto">
+        <div className="flex-grow card bg-base-100 shadow-xl overflow-auto">
           <div className="card-body">
             <h2 className="card-title">Filtres</h2>
             <div className="grid gap-6">
@@ -285,14 +316,20 @@ function FilterPanel({ updateOffers, createMarkers }) {
                   onChange={onChangeInput}
                 />
               </div>
+              <div className="form-control">
+                <label htmlFor="my-drawer" className="btn btn-primary">
+                  Fermer
+                </label>
+              </div>
             </div>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );
 }
 
+// Bouton pour ouvrir le panneau de filtres
 function FilterButton() {
   return (
     <div className="leaflet-bottom leaflet-left">
@@ -305,6 +342,7 @@ function FilterButton() {
   );
 }
 
+// Wrapper pour le panneau de filtres
 function PanelWrapper({ children, panel }) {
   return (
     <div className="drawer drawer-end">

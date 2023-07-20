@@ -1,7 +1,13 @@
 import { getOffers } from "../api/offer/route";
 
+/**
+ * Ce fichier est déprécié, il est cependant conservé pour montrer la possibilité
+ * de récupérer des données en appelant directement la fonction getOffers depuis le serveur.
+ */
+
 // Temps de survie dans le cache
 export const revalidate = 60;
+
 async function getData() {
     return getOffers(10);
 }

@@ -1,5 +1,7 @@
 "use client";
+
 import "leaflet/dist/leaflet.css";
+
 import {
   MapContainer,
   TileLayer,
@@ -12,13 +14,16 @@ import {
 import L from "leaflet";
 
 import { OfferPanel } from "../Offer/offer.js";
+
 import {
   FilterPanel,
   FilterButton,
   PanelWrapper,
 } from "../FilterPanel/filter-panel.js";
+
 import { useState } from "react";
 
+// Function to create a scrollable container
 function contentScrollable(element, rightScroll, height = "h-full") {
   let containerClassName = "overflow-y-auto " + height + " mb-5 " + rightScroll;
 
@@ -29,6 +34,7 @@ function contentScrollable(element, rightScroll, height = "h-full") {
   return <div className={containerClassName}>{element}</div>;
 }
 
+// Function to get the icon of the marker depending on the precision of the address
 function getIcon(isAdressPrecise) {
   if (isAdressPrecise) {
     return L.icon({
@@ -43,7 +49,7 @@ function getIcon(isAdressPrecise) {
   }
 }
 
-// Component showing a circle or nothing depending on the state of the marker
+// Composant pour créer un marqueur qui affiche un cercle autour de l'offre
 function CircleMarkerWithState(props) {
   const [showCircle, setShowCircle] = useState(false);
 
@@ -68,6 +74,7 @@ function CircleMarkerWithState(props) {
   );
 }
 
+// Composant pour créer un simple marqueur
 function SimpleMarker(props) {
   const popupWidth = Math.max((screen.width * 1) / 3, 300);
   return (
@@ -82,11 +89,11 @@ function SimpleMarker(props) {
   );
 }
 
+// Fonction pour créer les marqueurs en fonction des offres
 function createMarkers(offers, offsetKey = 0) {
   const tmpRows = [];
+
   for (let i = 0; i < offers.length; i++) {
-    // note: we are adding a key prop here to allow react to uniquely identify each
-    // element in this array. see: https://reactjs.org/docs/lists-and-keys.html
     let offer = offers[i];
 
     if (offer.f1_ == null || offer.f0_ == null) {
@@ -114,9 +121,15 @@ function createMarkers(offers, offsetKey = 0) {
   return tmpRows;
 }
 
+/**
+ * Composant pour afficher la carte, le panneau de filtres et les offres
+ * @returns
+ */
 function Map() {
   const [offers, setOffers] = useState([]);
 
+  // Fonction pour mettre à jour les offres
+  // Celle-ci est nécessaire pour les fetchs divisés en plusieurs parties
   function updateOffers(newOffers, clean = true) {
     if (clean) {
       setOffers([]);

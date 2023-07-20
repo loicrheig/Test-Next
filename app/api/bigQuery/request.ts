@@ -1,5 +1,10 @@
 import { BigQuery } from "@google-cloud/bigquery"
 
+/**
+ * Exécute une requête de type SELECT sur BigQuery
+ * @param query 
+ * @returns les résultats de la requête
+ */
 export async function executeSelectQuery(query:string) {
     const client = new BigQuery({
       projectId: process.env.PROJECT_ID,
