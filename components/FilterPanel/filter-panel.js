@@ -51,9 +51,6 @@ async function fetchOffers({
   // Si l'id de la requête est différent de l'id global, cela signifie que
   // cette requête est une ancienne requête qui n'avait pas été terminée
   else if (id != globalId) {
-    console.log("id != globalId");
-    console.log(id);
-    console.log(globalId);
     return;
   }
 
