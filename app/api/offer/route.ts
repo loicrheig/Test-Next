@@ -6,7 +6,8 @@ import { executeSelectQuery } from "../bigQuery/request"
  * Dictionnaire contenant tous les filtres possibles pour les offres
  * avec leur valeur par défaut
  */
-export const parametersDefault = {
+export let parametersDefault: { [key: string]: any } = {};
+parametersDefault = {
   nbRooms : 0,
   minPrice : 0,
   maxPrice : 0,
@@ -46,7 +47,7 @@ export function getOffers(size:number) {
  * @param offset Depuis quelle offre on récupère les offres
  * @returns 
  */
-export function getOffersFiltered(nbRooms:number, minSurface:number, maxSurface:number, minPrice:number, maxPrice:number, maxSchoolDistance:number, maxShopDistance:number, transportType:string, transportDistance:number, limit:number, offset:number) {
+export function getOffersFiltered(nbRooms:number, minSurface:number, maxSurface:number, minPrice:number, maxPrice:number, maxSchoolDistance:number, maxShopDistance:number, transportType:string, transportDistance:number, limit:number=-1, offset:number=-1) {
   let query = "SELECT Title, Address, Description, Price, Type, NbRooms, Surface, Management, ImageUrls, AddressPrecise, ST_X(Coordinate), ST_Y(Coordinate), Shops, ARRAY_LENGTH(Schools) SchoolNumber, PublicTransports, InterestPoints FROM `tb-datalake-v1.offers_data_set.t_offers`";
   let parameters = [];
 
@@ -64,38 +65,38 @@ export function getOffersFiltered(nbRooms:number, minSurface:number, maxSurface:
   // La valeur -1 signifie que le filtre n'est pas utilisé
   // Sauf pour le transportType qui est une string
 
-  if (nbRooms != -1) {
+  if (nbRooms != parametersDefault.nbRooms) {
     addAnd("NbRooms = ?");
     parameters.push(nbRooms);
   }
-  if (minSurface != -1) {
+  if (minSurface != parametersDefault.minSurface) {
     addAnd("Surface >= ?");
     parameters.push(minSurface);
   }
-  if (maxSurface != -1) {
+  if (maxSurface != parametersDefault.maxSurface) {
     addAnd("Surface <= ?");
     parameters.push(maxSurface);
   }
-  if (minPrice != -1) {
+  if (minPrice != parametersDefault.minPrice) {
     addAnd("Price >= ?");
     parameters.push(minPrice);
   }
-  if (maxPrice != -1) {
+  if (maxPrice != parametersDefault.maxPrice) {
     addAnd("Price <= ?");
     parameters.push(maxPrice);
   }
   // Vérifie qu'il existe au moins une école à moins de maxSchoolDistance mètres et qui contient "primaire" dans son nom
-  if (maxSchoolDistance != -1) {
+  if (maxSchoolDistance != parametersDefault.maxSchoolDistance) {
     addAnd("EXISTS (SELECT 1 FROM UNNEST(schools) AS school WHERE school.distance <= ? AND (school.name LIKE '%primaire%' OR school.name LIKE '%Primaire%' ))");
     parameters.push(maxSchoolDistance);
   }
   // Vérifie qu'il existe au moins un commerce à moins de maxShopDistance mètres
-  if (maxShopDistance != -1) {
+  if (maxShopDistance != parametersDefault.maxShopDistance) {
     addAnd("EXISTS (SELECT 1 FROM UNNEST(shops) AS shop WHERE shop.distance <= ?)");
     parameters.push(maxShopDistance);
   }
   // Vérifie qu'il existe au moins un transport à moins de transportDistance mètres et qui est de type transportType
-  if (transportDistance != -1) {
+  if (transportDistance != parametersDefault.transportDistance) {
     if (transportType == 'Tous') {
       addAnd("EXISTS (SELECT 1 FROM UNNEST(publicTransports) AS publicTransport WHERE publicTransport.distance <= ?)");
       parameters.push(transportDistance);
@@ -116,7 +117,6 @@ export function getOffersFiltered(nbRooms:number, minSurface:number, maxSurface:
   }
 
   query = SQLString.format(query, parameters);
-
   return executeSelectQuery(query);
 }
 
@@ -127,18 +127,26 @@ export function getOffersFiltered(nbRooms:number, minSurface:number, maxSurface:
 */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const nbRooms = searchParams.get(parametersNames[0])??-1;
-  const minPrice = searchParams.get(parametersNames[1])??-1;
-  const maxPrice = searchParams.get(parametersNames[2])??-1;
-  const minSurface = searchParams.get(parametersNames[3])??-1;
-  const maxSurface = searchParams.get(parametersNames[4])??-1;
-  const maxSchoolDistance = searchParams.get(parametersNames[5])??-1;
-  const maxShopDistance = searchParams.get(parametersNames[6])??-1;
-  const transportType = searchParams.get(parametersNames[7])??"Tous";
-  const transportDistance = searchParams.get(parametersNames[8])??-1;
-  const limit = searchParams.get('limit')??-1;
-  const offset = searchParams.get('offset')??-1;
+  const nbRooms = searchParams.get(parametersNames[0])??parametersDefault[parametersNames[0]];
+  const minPrice = searchParams.get(parametersNames[1])??parametersDefault[parametersNames[1]];
+  const maxPrice = searchParams.get(parametersNames[2])??parametersDefault[parametersNames[2]];
+  const minSurface = searchParams.get(parametersNames[3])??parametersDefault[parametersNames[3]];
+  const maxSurface = searchParams.get(parametersNames[4])??parametersDefault[parametersNames[4]];
+  const maxSchoolDistance = searchParams.get(parametersNames[5])??parametersDefault[parametersNames[5]];
+  const maxShopDistance = searchParams.get(parametersNames[6])??parametersDefault[parametersNames[6]];
+  const transportType = searchParams.get(parametersNames[7])??parametersDefault[parametersNames[7]];
+  const transportDistance = searchParams.get(parametersNames[8])??parametersDefault[parametersNames[8]];
+  const limit:string|null|number = searchParams.get('limit');
+  const offset:string|null|number = searchParams.get('offset');
   const rows = await getOffersFiltered(+nbRooms, +minSurface, +maxSurface, +minPrice, +maxPrice, +maxSchoolDistance, +maxShopDistance, transportType, +transportDistance, +limit, +offset);
+  let rows;
+
+  if (limit != null && !isNaN(+limit) && offset != null && !isNaN(+offset)) {
+    rows = await getOffersFiltered(+nbRooms, +minSurface, +maxSurface, +minPrice, +maxPrice, +maxSchoolDistance, +maxShopDistance, transportType, +transportDistance, +limit, +offset);
+  }
+  else{
+    rows = await getOffersFiltered(+nbRooms, +minSurface, +maxSurface, +minPrice, +maxPrice, +maxSchoolDistance, +maxShopDistance, transportType, +transportDistance);
+  }
 
   return NextResponse.json(rows);
 }
