@@ -139,8 +139,31 @@ function ZoomHandler({ onChangeInput }) {
       const upperLeft = bounds.getNorthWest();
       const lowerRight = bounds.getSouthEast();
 
-      console.log(upperLeft);
-      console.log(lowerRight);
+      // format the coordinates to be a string lat,lng
+      const upperLeftString = upperLeft.lat + "," + upperLeft.lng;
+      const lowerRightString = lowerRight.lat + "," + lowerRight.lng;
+
+      onChangeInput({
+        target: {
+          name: parametersNames[9],
+          value: upperLeftString,
+        },
+      });
+
+      onChangeInput({
+        target: {
+          name: parametersNames[10],
+          value: lowerRightString,
+        },
+      });
+    },
+    dragend: () => {
+      // Get screen bounds from zoom
+      const bounds = mapEvents.getBounds();
+
+      // Get the upper left corner and the lower right corner
+      const upperLeft = bounds.getNorthWest();
+      const lowerRight = bounds.getSouthEast();
 
       // format the coordinates to be a string lat,lng
       const upperLeftString = upperLeft.lat + "," + upperLeft.lng;
