@@ -138,7 +138,7 @@ export async function GET(request: Request) {
   const transportDistance = searchParams.get(parametersNames[8])??parametersDefault[parametersNames[8]];
   const limit:string|null|number = searchParams.get('limit');
   const offset:string|null|number = searchParams.get('offset');
-  const rows = await getOffersFiltered(+nbRooms, +minSurface, +maxSurface, +minPrice, +maxPrice, +maxSchoolDistance, +maxShopDistance, transportType, +transportDistance, +limit, +offset);
+
   let rows;
 
   if (limit != null && !isNaN(+limit) && offset != null && !isNaN(+offset)) {
