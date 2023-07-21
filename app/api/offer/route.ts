@@ -17,6 +17,8 @@ parametersDefault = {
   maxShopDistance : 0,
   transportType : 'Tous',
   transportDistance : 0,
+  boundingBoxUpperLeft : '46.56310942959972, 6.589736938476563',
+  boundingBoxLowerRight : '46.47688154071965, 6.678314208984376',
 }
 
 export const parametersNames = Object.keys(parametersDefault);
@@ -47,9 +49,9 @@ export function getOffers(size:number) {
  * @param offset Depuis quelle offre on récupère les offres
  * @returns 
  */
-export function getOffersFiltered(nbRooms:number, minSurface:number, maxSurface:number, minPrice:number, maxPrice:number, maxSchoolDistance:number, maxShopDistance:number, transportType:string, transportDistance:number, limit:number=-1, offset:number=-1) {
-  let query = "SELECT Title, Address, Description, Price, Type, NbRooms, Surface, Management, ImageUrls, AddressPrecise, ST_X(Coordinate), ST_Y(Coordinate), Shops, ARRAY_LENGTH(Schools) SchoolNumber, PublicTransports, InterestPoints FROM `tb-datalake-v1.offers_data_set.t_offers`";
+export function getOffersFiltered(nbRooms:number, minSurface:number, maxSurface:number, minPrice:number, maxPrice:number, maxSchoolDistance:number, maxShopDistance:number, transportType:string, transportDistance:number, boundingBoxUpperLeft:number[], boundingBoxLowerRight:number[], limit:number=-1, offset:number=-1) {
   let parameters = [];
+  let query = "SELECT Title, Address, Description, Price, Type, NbRooms, Surface, Management, ImageUrls, AddressPrecise, ST_X(Coordinate), ST_Y(Coordinate), Shops, ARRAY_LENGTH(Schools) SchoolNumber, PublicTransports, InterestPoints FROM `tb-datalake-v1.offers_data_set.t_offers`";
 
   // Si on a au moins un filtre, on ajoute le WHERE et pour les suivants on ajoute le AND
   let firstParamPassed = false;
@@ -107,6 +109,13 @@ export function getOffersFiltered(nbRooms:number, minSurface:number, maxSurface:
       parameters.push(transportType);
     }
   }
+
+    // Check si le champ coordinate est dans la bounding box
+    addAnd("ST_Y(Coordinate) < " + boundingBoxUpperLeft[0]);
+    addAnd("ST_X(Coordinate) > " + boundingBoxUpperLeft[1]);
+    addAnd("ST_Y(Coordinate) > " + boundingBoxLowerRight[0]);
+    addAnd("ST_X(Coordinate) < " + boundingBoxLowerRight[1]);
+
   if (limit != -1) {
     query += "LIMIT ? ";
     parameters.push(limit);
@@ -139,13 +148,20 @@ export async function GET(request: Request) {
   const limit:string|null|number = searchParams.get('limit');
   const offset:string|null|number = searchParams.get('offset');
 
+  const boundingBoxUpperLeft = searchParams.get(parametersNames[9])??parametersDefault[parametersNames[9]];
+  const boundingBoxLowerRight = searchParams.get(parametersNames[10])??parametersDefault[parametersNames[10]];
+
+  // parse bounding box to get an number array
+  const boundingBoxUpperLeftArray = boundingBoxUpperLeft.split(',').map(Number);
+  const boundingBoxLowerRightArray = boundingBoxLowerRight.split(',').map(Number);
+
   let rows;
 
   if (limit != null && !isNaN(+limit) && offset != null && !isNaN(+offset)) {
-    rows = await getOffersFiltered(+nbRooms, +minSurface, +maxSurface, +minPrice, +maxPrice, +maxSchoolDistance, +maxShopDistance, transportType, +transportDistance, +limit, +offset);
+    rows = await getOffersFiltered(+nbRooms, +minSurface, +maxSurface, +minPrice, +maxPrice, +maxSchoolDistance, +maxShopDistance, transportType, +transportDistance, boundingBoxUpperLeftArray, boundingBoxLowerRightArray, +limit, +offset);
   }
   else{
-    rows = await getOffersFiltered(+nbRooms, +minSurface, +maxSurface, +minPrice, +maxPrice, +maxSchoolDistance, +maxShopDistance, transportType, +transportDistance);
+    rows = await getOffersFiltered(+nbRooms, +minSurface, +maxSurface, +minPrice, +maxPrice, +maxSchoolDistance, +maxShopDistance, transportType, +transportDistance , boundingBoxUpperLeftArray, boundingBoxLowerRightArray);
   }
 
   return NextResponse.json(rows);

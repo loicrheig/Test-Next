@@ -1,90 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  parametersDefault,
-  parametersNames,
-} from "../../app/api/offer/route.ts";
-
-/**
- * Fonction qui permet de faire un debounce sur une fonction.
- * Cela afin d'éviter de faire trop de requêtes non-voulues au serveur.
- * @param {*} func La fonction à appeler
- * @param {*} delay Le délai en ms
- * @returns La fonction à appeler
- */
-function debounce(func, delay) {
-  let debounceTimer;
-  return function (...args) {
-    const context = this;
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => func.apply(context, args), delay);
-  };
-}
-
-// Id global pour éviter que les requêtes ne se chevauchent
-let globalId = 0;
-const getId = () => {
-  globalId++;
-  return globalId;
-};
-
-/**
- * Fonction allant récupérer les offres sur le serveur.
- * Et mettant à jour l'état des offres à afficher.
- * @param uri L'url de la requête
- * @param offset L'offset de la requête
- * @param limit Le nombre d'offres à récupérer
- * @param updateOffers La fonction pour mettre à jour les offres
- * @param createMarkers La fonction pour créer les markers
- * @param id L'id de la requête
- */
-async function fetchOffers({
-  uri,
-  offset,
-  limit,
-  updateOffers,
-  createMarkers,
-  id = null,
-}) {
-  if (id == null) {
-    id = getId();
-  }
-  // Si l'id de la requête est différent de l'id global, cela signifie que
-  // cette requête est une ancienne requête qui n'avait pas été terminée
-  else if (id != globalId) {
-    return;
-  }
-
-  const url = new URL(uri);
-  url.searchParams.append("offset", offset);
-
-  fetch(url)
-    .then((res) => res.json())
-    .then((data) => {
-      // Première itération, clean les anciens markers
-      // Sinon, si la requête n'a pas retourné d'offres, la récursion s'arrête
-      if (offset == 0) {
-        updateOffers(createMarkers(data, offset), true);
-      } else if (data.length > 0) {
-        updateOffers(createMarkers(data, offset), false);
-      } else {
-        return;
-      }
-      fetchOffers({
-        uri: uri,
-        offset: offset + limit,
-        limit: limit,
-        updateOffers: updateOffers,
-        createMarkers: createMarkers,
-        id: id,
-      });
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-}
-
-// Déclaration de la fonction fetchOffers avec un debounce de 500ms
-const debounceFetchOffers = debounce(fetchOffers, 500);
+import { parametersNames } from "../../app/api/offer/route.ts";
 
 /**
  * Panneau de filtres ressemblant à un formulaire.
@@ -92,8 +7,7 @@ const debounceFetchOffers = debounce(fetchOffers, 500);
  * @param createMarkers La fonction pour créer les markers
  * @returns Le panneau de filtres en JSX
  */
-function FilterPanel({ updateOffers, createMarkers }) {
-  const [filters, setFilters] = useState(parametersDefault);
+function FilterPanel({ onChangeInput, setFilters, filters }) {
   const [transportTypes, setTransportTypes] = useState([]);
 
   // Au moment du chargement du composant, récupère les types de transports
@@ -109,40 +23,6 @@ function FilterPanel({ updateOffers, createMarkers }) {
         setTransportTypes(tmpArray);
       });
   }, []);
-
-  // A chaque changement des filtres, un nouvel url est créé
-  // Et les offres sont récupérées
-  useEffect(() => {
-    const url = new URL("/api/offer", window.location.origin);
-    for (const key in filters) {
-      if (filters[key] != parametersDefault[key]) {
-        url.searchParams.append(key, filters[key]);
-      }
-    }
-
-    // Nombre d'offres à récupérer à chaque requête
-    // Afin de ne pas surcharger le serveur
-    const limit = 300;
-    url.searchParams.append("limit", limit);
-
-    debounceFetchOffers({
-      uri: url.toString(),
-      offset: 0,
-      limit: limit,
-      updateOffers: updateOffers,
-      createMarkers: createMarkers,
-    });
-  }, [filters]);
-
-  // Exécuté à chaque modification d'un input
-  // Met à jour les filtres
-  const onChangeInput = (e) => {
-    const { name, value } = e.target;
-    setFilters((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
 
   // Fonctions permettant d'éviter que le min soit supérieur au max et vice-versa
   const handleMaxSliderChange = (minField, maxField) => (e) => {
