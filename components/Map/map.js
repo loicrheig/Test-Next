@@ -312,7 +312,7 @@ function Map() {
         />
       }
     >
-      <div id="map-container" className="w-full">
+      <div id="map-container" className="w-full h-screen">
         <MapContainer
           center={[46.519962, 6.633597]}
           zoom={13}
