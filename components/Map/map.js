@@ -74,6 +74,7 @@ function SimpleMarker({ element, type }) {
 
 // Composant pour créer un simple marqueur
 function SimpleOfferMarker({ props, eventHandlers = {} }) {
+  const [isHovered, setIsHovered] = useState(false);
   const tmpRows = [];
   for (let i = 0; i < props.offer.Shops.length; i++) {
     let shop = props.offer.Shops[i];
@@ -89,6 +90,8 @@ function SimpleOfferMarker({ props, eventHandlers = {} }) {
         ]}
         color="red"
         key={"shop line " + i}
+        opacity={0.5}
+        dashArray="7, 7"
       />
     );
   }
@@ -109,6 +112,8 @@ function SimpleOfferMarker({ props, eventHandlers = {} }) {
         ]}
         color="blue"
         key={"school line " + i}
+        opacity={0.5}
+        dashArray="8, 8"
       />
     );
   }
@@ -133,6 +138,8 @@ function SimpleOfferMarker({ props, eventHandlers = {} }) {
         ]}
         color="green"
         key={"interest line " + i}
+        opacity={0.5}
+        dashArray="9, 9"
       />
     );
   }
@@ -155,8 +162,10 @@ function SimpleOfferMarker({ props, eventHandlers = {} }) {
           [props.offer.f1_, props.offer.f0_],
           [publicTransport._field_2, publicTransport._field_1],
         ]}
-        color="violet"
+        color="grey"
         key={"transport line " + i}
+        opacity={0.5}
+        dashArray="10, 10"
       />
     );
   }
