@@ -51,7 +51,42 @@ export function getOffers(size:number) {
  */
 export function getOffersFiltered(nbRooms:number, minSurface:number, maxSurface:number, minPrice:number, maxPrice:number, maxSchoolDistance:number, maxShopDistance:number, transportType:string, transportDistance:number, boundingBoxUpperLeft:number[], boundingBoxLowerRight:number[], limit:number=-1, offset:number=-1) {
   let parameters = [];
-  let query = "SELECT Title, Address, Description, Price, Type, NbRooms, Surface, Management, ImageUrls, AddressPrecise, ST_X(Coordinate), ST_Y(Coordinate), Shops, ARRAY_LENGTH(Schools) SchoolNumber, PublicTransports, InterestPoints FROM `tb-datalake-v1.offers_data_set.t_offers`";
+  let query = `SELECT Title, Address, Description, Price, Type, NbRooms, Surface, Management, ImageUrls, 
+              AddressPrecise, ST_X(Coordinate), ST_Y(Coordinate), 
+              ARRAY(
+                SELECT AS STRUCT
+                  ST_X(Shop.Position),
+                  ST_Y(Shop.Position),
+                  Shop.Name AS Name,
+                  Shop.Distance AS Distance,
+                FROM UNNEST(Shops) AS Shop
+              ) AS Shops, 
+              ARRAY_LENGTH(Schools) SchoolNumber, 
+              ARRAY(
+                SELECT AS STRUCT
+                  ST_X(School.Position),
+                  ST_Y(School.Position),
+                FROM UNNEST(Schools) AS School
+              ) AS Schools,
+              ARRAY(
+                SELECT AS STRUCT
+                  ST_X(PublicTransport.Position),
+                  ST_Y(PublicTransport.Position),
+                  PublicTransport.Name AS Name,
+                  PublicTransport.Distance AS Distance,
+                  PublicTransport.Type AS Type,
+                FROM UNNEST(PublicTransports) AS PublicTransport
+              ) AS PublicTransports,
+              ARRAY(
+                SELECT AS STRUCT
+                  ST_X(InterestPoint.Position),
+                  ST_Y(InterestPoint.Position),
+                  InterestPoint.Name AS Name,
+                  InterestPoint.Distance AS Distance,
+                  InterestPoint.Type AS Type,
+                FROM UNNEST(InterestPoints) AS InterestPoint
+              ) AS InterestPoints 
+              FROM \`tb-datalake-v1.offers_data_set.t_offers_experimental\``;
 
   // Si on a au moins un filtre, on ajoute le WHERE et pour les suivants on ajoute le AND
   let firstParamPassed = false;

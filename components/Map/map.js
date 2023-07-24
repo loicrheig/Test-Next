@@ -10,6 +10,7 @@ import {
   Circle,
   LayersControl,
   useMapEvents,
+  Polyline,
 } from "react-leaflet";
 
 import L from "leaflet";
@@ -27,7 +28,7 @@ import {
   parametersNames,
 } from "../../app/api/offer/route.ts";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 
 // Function to create a scrollable container
 function contentScrollable(element, rightScroll, height = "h-full") {
@@ -41,57 +42,174 @@ function contentScrollable(element, rightScroll, height = "h-full") {
 }
 
 // Function to get the icon of the marker depending on the precision of the address
-function getIcon(isAdressPrecise) {
+function getIcon(url) {
+  return L.icon({
+    iconUrl: url,
+    iconSize: [25, 40],
+  });
+}
+
+function getOfferIcon(isAdressPrecise) {
   if (isAdressPrecise) {
-    return L.icon({
-      iconUrl: "/detailsAddressMarker.png",
-      iconSize: [25, 40],
-    });
+    return getIcon("/detailsAddressMarker.png");
   } else {
-    return L.icon({
-      iconUrl: "/approximateAddressMarker.png",
-      iconSize: [25, 40],
-    });
+    return getIcon("/approximateAddressMarker.png");
   }
 }
 
+function SimpleMarker({ element, type }) {
+  let icon;
+
+  if (type == "shop") {
+    icon = getIcon("/shop.svg");
+  } else if (type == "school") {
+    icon = getIcon("/school.svg");
+  } else if (type == "interest") {
+    icon = getIcon("/like.svg");
+  } else if (type == "transport") {
+    icon = getIcon("/bus.svg");
+  }
+  return <Marker position={[element._field_2, element._field_1]} icon={icon} />;
+}
+
+// Composant pour créer un simple marqueur
+function SimpleOfferMarker({ props, eventHandlers = {} }) {
+  const tmpRows = [];
+  for (let i = 0; i < props.offer.Shops.length; i++) {
+    let shop = props.offer.Shops[i];
+    if (shop._field_1 == null || shop._field_2 == null) {
+      continue;
+    }
+    tmpRows.push(<SimpleMarker element={shop} type="shop" key={"shop " + i} />);
+    tmpRows.push(
+      <Polyline
+        positions={[
+          [props.offer.f1_, props.offer.f0_],
+          [shop._field_2, shop._field_1],
+        ]}
+        color="red"
+        key={"shop line " + i}
+      />
+    );
+  }
+
+  for (let i = 0; i < props.offer.Schools.length; i++) {
+    let school = props.offer.Schools[i];
+    if (school._field_1 == null || school._field_2 == null) {
+      continue;
+    }
+    tmpRows.push(
+      <SimpleMarker element={school} type="school" key={"school " + i} />
+    );
+    tmpRows.push(
+      <Polyline
+        positions={[
+          [props.offer.f1_, props.offer.f0_],
+          [school._field_2, school._field_1],
+        ]}
+        color="blue"
+        key={"school line " + i}
+      />
+    );
+  }
+
+  for (let i = 0; i < props.offer.InterestPoints.length; i++) {
+    let interestPoint = props.offer.InterestPoints[i];
+    if (interestPoint._field_1 == null || interestPoint._field_2 == null) {
+      continue;
+    }
+    tmpRows.push(
+      <SimpleMarker
+        element={interestPoint}
+        type="interest"
+        key={"interest " + i}
+      />
+    );
+    tmpRows.push(
+      <Polyline
+        positions={[
+          [props.offer.f1_, props.offer.f0_],
+          [interestPoint._field_2, interestPoint._field_1],
+        ]}
+        color="green"
+        key={"interest line " + i}
+      />
+    );
+  }
+
+  for (let i = 0; i < props.offer.PublicTransports.length; i++) {
+    let publicTransport = props.offer.PublicTransports[i];
+    if (publicTransport._field_1 == null || publicTransport._field_2 == null) {
+      continue;
+    }
+    tmpRows.push(
+      <SimpleMarker
+        element={publicTransport}
+        type="transport"
+        key={"transport " + i}
+      />
+    );
+    tmpRows.push(
+      <Polyline
+        positions={[
+          [props.offer.f1_, props.offer.f0_],
+          [publicTransport._field_2, publicTransport._field_1],
+        ]}
+        color="violet"
+        key={"transport line " + i}
+      />
+    );
+  }
+
+  const [showAmenities, setshowAmenities] = useState(false);
+
+  // Add mouse over to eventHandlers
+  eventHandlers.mouseover = (event) => setshowAmenities(true);
+  eventHandlers.mouseout = (event) => setshowAmenities(false);
+
+  const popupWidth = Math.max((screen.width * 1) / 3, 300);
+
+  return (
+    <div>
+      <Marker
+        position={props.position}
+        icon={getOfferIcon(props.offer.AddressPrecise)}
+        eventHandlers={eventHandlers}
+      >
+        <Popup maxWidth={popupWidth}>
+          <OfferPanel
+            offer={props.offer}
+            contentScrollable={contentScrollable}
+          />
+        </Popup>
+      </Marker>
+      {showAmenities && tmpRows}
+    </div>
+  );
+}
+
+function PreciseOfferMarker(props) {
+  return <SimpleOfferMarker props={props} />;
+}
+
 // Composant pour créer un marqueur qui affiche un cercle autour de l'offre
-function CircleMarkerWithState(props) {
+function UnpreciseOfferMarker(props) {
   const [showCircle, setShowCircle] = useState(false);
 
   function activateCircle() {
     setShowCircle(!showCircle);
   }
 
-  const popupWidth = Math.max((screen.width * 1) / 3, 300);
-
   return (
-    <Marker
-      position={props.position}
-      icon={getIcon(props.offer.AddressPrecise)}
-      riseOnHover={true}
-      eventHandlers={{ click: activateCircle }}
-    >
-      <Popup maxWidth={popupWidth}>
-        <OfferPanel offer={props.offer} contentScrollable={contentScrollable} />
-      </Popup>
+    <div>
+      <SimpleOfferMarker
+        props={props}
+        eventHandlers={{
+          click: (event) => activateCircle(),
+        }}
+      />
       {showCircle && <Circle center={props.position} radius={1000} />}
-    </Marker>
-  );
-}
-
-// Composant pour créer un simple marqueur
-function SimpleMarker(props) {
-  const popupWidth = Math.max((screen.width * 1) / 3, 300);
-  return (
-    <Marker
-      position={props.position}
-      icon={getIcon(props.offer.AddressPrecise)}
-    >
-      <Popup maxWidth={popupWidth}>
-        <OfferPanel offer={props.offer} contentScrollable={contentScrollable} />
-      </Popup>
-    </Marker>
+    </div>
   );
 }
 
@@ -108,7 +226,7 @@ function createMarkers(offers, offsetKey = 0) {
 
     if (offer.AddressPrecise) {
       tmpRows.push(
-        <SimpleMarker
+        <PreciseOfferMarker
           position={[offer.f1_, offer.f0_]}
           offer={offer}
           key={i + offsetKey}
@@ -116,7 +234,7 @@ function createMarkers(offers, offsetKey = 0) {
       );
     } else {
       tmpRows.push(
-        <CircleMarkerWithState
+        <UnpreciseOfferMarker
           position={[offer.f1_, offer.f0_]}
           offer={offer}
           key={i + offsetKey}
